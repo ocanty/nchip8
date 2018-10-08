@@ -12,7 +12,7 @@ cpu_daemon::cpu_daemon() :
 
     this->register_message_handler(cpu_message_type::LoadROM, [this](const cpu_message& msg)
     {
-        // std::cout << "[cpu_daemon] received rom: " << msg.m_data.size() << " bytes " << std::endl;
+        std::cout << "[cpu_daemon] received rom: " << msg.m_data.size() << " bytes " << std::endl;
 
         m_cpu.reset();
         m_cpu.load_rom(msg.m_data, 0x200);
@@ -20,12 +20,12 @@ cpu_daemon::cpu_daemon() :
 
     this->register_message_handler(cpu_message_type::SetStateRunning,[this](const cpu_message& msg)
     {
-        // std::cout << "set cpu running";
+        std::cout << "[cpu_daemon] set cpu running";
         this->set_cpu_state(cpu_state::running);
     });
 
 
-    // std::cout << "[cpu_daemon] starting cpu thread" << std::endl;
+    std::cout << "[cpu_daemon] starting cpu thread" << std::endl;
     m_cpu_thread = std::thread(&cpu_daemon::cpu_thread, this);
 }
 

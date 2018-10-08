@@ -6,50 +6,63 @@
 
 #include <curses.h>
 #include <clocale>
+#include <iostream>
+#include <vector>
+#include <thread>
+#include <chrono>
 
 gui::gui()
 {
     this->rebuild_windows();
+    this->start_stream_redirection();
+    // std::cout << "[gui] init ncurses" << std::endl;
     this->thread();
 }
 
 gui::~gui()
 {
-
+    this->end_stream_redirection();
 }
 
 void gui::rebuild_windows()
 {
-    if(m_window != NULL)        ::wdelch(m_window);
-    if(m_log_window != NULL)    ::wdelch(m_log_window);
-    if(m_screen_window != NULL) ::wdelch(m_screen_window);
+    ::newterm(NULL, NULL, stdin);
 
+    m_window = std::shared_ptr<::WINDOW>(::initscr(), ::wdelch);
     ::setlocale(LC_ALL," ");
-    m_window = ::initscr();
     ::cbreak();
     ::noecho();
     ::nonl();
     ::intrflush(stdscr, FALSE);
     ::keypad(stdscr, TRUE);
 
-    getmaxyx(m_window,m_window_w,m_window_h);
+    ::wborder(m_window.get(),0,0,0,0,0,0,0,0);
+    getmaxyx(m_window.get(),m_window_w,m_window_h);
 
-    m_screen_window = ::newwin(16+2,64+2,0,1);
+    m_screen_window = std::shared_ptr<::WINDOW>(::newwin(16+2,64+2,0,1));
+    ::wborder(m_screen_window.get(), 0,0,0,0,0,0,0,0);
+    ::wrefresh(m_screen_window.get());
 
-    const auto& remaining_w = (m_window_w - (32+4)); // +2 for border
-    const auto& remaining_h = (m_window_h - (16+2)); // +2 for border
-    m_log_window = ::newwin(remaining_h,remaining_w,16+2,1);
 
-    ::wclear(m_window);
-    ::wclear(m_screen_window);
-    ::wclear(m_log_window);
+    m_log_window = std::shared_ptr<::WINDOW>(::newwin(8+2,64+2,18,1), ::wdelch);
+    ::wborder(m_log_window.get(),0,0,0,0,0,0,0,0);
+    ::wrefresh(m_log_window.get());
+    this->update_log_window();
+}
 
-    ::wborder(m_window,0,0,0,0,0,0,0,0);
-    ::wborder(m_screen_window,0,0,0,0,0,0,0,0);
-    ::wborder(m_log_window,0,0,0,0,0,0,0,0);
+void gui::update_windows_on_resize()
+{
+    // get current terminal size
+    int new_term_w = 0;
+    int new_term_h = 0;
+    getmaxyx(m_window.get(),new_term_w,new_term_h);
 
-    ::wrefresh(m_log_window);
-    ::wrefresh(m_window);
+    // resize the window if it's changed within the past update
+    if(new_term_w != m_window_w || new_term_h != m_window_h)
+    {
+        m_window_w = new_term_w; m_window_h = new_term_h;
+        this->rebuild_windows();
+    }
 }
 
 void gui::thread()
@@ -57,18 +70,65 @@ void gui::thread()
     bool die = false;
     while(!die)
     {
-        // get current terminal size
-        int new_term_w = 0;
-        int new_term_h = 0;
-        getmaxyx(m_window,new_term_w,new_term_h);
+        update_windows_on_resize();
+        update_logs_on_cout();
 
-        // resize the window if it's changed
-        if(new_term_w != m_window_w || new_term_h != m_window_h)
+        // dont eat cpu
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+}
+
+void gui::update_logs_on_cout()
+{
+    if(!m_cout_ss.str().empty())
+    {
+        while(m_cout_ss.good() && !m_cout_ss.eof())
         {
-            m_window_w = new_term_w; m_window_h = new_term_h;
-            this->rebuild_windows();
+            static std::string line;
+
+            line.clear();
+            std::getline(m_cout_ss, line);
+            m_log.push_back(line);
         }
 
-
+        this->update_log_window();
     }
+
+}
+
+void gui::update_log_window()
+{
+    if(m_log_window == nullptr) return;
+
+
+    //::wborder(m_log_window.get(), 0,0,0,0,0,0,0,0);
+
+    //::wrefresh(m_log_window.get());
+}
+
+void gui::start_stream_redirection()
+{
+    // get the read buffers of the cout,cerr streams if we had previously not redirected it
+    if(m_cout_rdbuf == nullptr)
+    {
+        std::streambuf* rdbuf = std::cout.rdbuf();
+        m_cout_rdbuf = std::shared_ptr<std::streambuf>(rdbuf);
+    }
+
+    if(m_cerr_rdbuf == nullptr)
+    {
+        std::streambuf* rdbuf = std::cerr.rdbuf();
+        m_cerr_rdbuf = std::shared_ptr<std::streambuf>(rdbuf);
+    }
+
+    // set the cout,cerr read bufs to our string streams
+    std::cout.rdbuf(m_cout_ss.rdbuf());
+    std::cerr.rdbuf(m_cerr_ss.rdbuf());
+}
+
+void gui::end_stream_redirection()
+{
+    // if we have the stream buffers stored, set them back
+    if(m_cout_rdbuf != nullptr) std::cout.rdbuf(m_cout_rdbuf.get());
+    if(m_cerr_rdbuf != nullptr) std::cerr.rdbuf(m_cerr_rdbuf.get());
 }

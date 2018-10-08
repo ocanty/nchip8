@@ -40,6 +40,8 @@ public:
     std::optional<std::string> dasm_op(const std::uint16_t& address);
 
 private:
+    //std::array<std::array<
+
     std::array<std::uint8_t,0x1000> m_ram;
     std::array<std::uint8_t, 16> m_gpr;
     std::uint16_t m_i; // I register, only uses right-most 12 bits

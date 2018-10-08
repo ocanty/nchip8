@@ -11,7 +11,7 @@
 nchip8::nchip8(const std::vector<std::string>& args)
 {
     // dump the arguments
-    // std::cout << "[nchip8] start" << std::endl;
+    std::cout << "[nchip8] start" << std::endl;
     for(auto& arg : args)
     {
         //std::cout << "[nchip8] arg: " << arg << std::endl;

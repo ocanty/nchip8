@@ -30,7 +30,7 @@ void cpu::reset()
 
 bool cpu::load_rom(const std::vector<std::uint8_t> &rom, const uint16_t load_addr)
 {
-    //std::cout << "[cpu] loading rom" << std::endl;
+    std::cout << "[cpu] loading rom" << std::endl;
 
     // Make sure the rom does not exceed typical loading size
     // Make sure it'l fit into the remainder of memory from it's load point
@@ -41,7 +41,7 @@ bool cpu::load_rom(const std::vector<std::uint8_t> &rom, const uint16_t load_add
         return true;
     }
 
-    //std::cout << "[cpu] loading rom failed :(" << std::endl;
+    std::cout << "[cpu] loading rom failed :(" << std::endl;
     return false;
 }
 
@@ -52,7 +52,7 @@ std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::ui
     // alias, not really relevant
     const std::uint16_t& op = instruction;
 
-    //std::cout << "Read operation -> " << std::hex << op << std::endl;
+    std::cout << "Read operation -> " << std::hex << op << std::endl;
 
     // for an instruction 0xABCD
     // we get each nibble, so nibble0 = 0xA, nibble1 = 0xB, etc...

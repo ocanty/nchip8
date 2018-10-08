@@ -52,6 +52,7 @@ public:
     cpu_state get_cpu_state();
     void set_cpu_state(const cpu_state&);
 
+    std::vector<bool>& get_screen();
 private:
     cpu_state m_cpu_state;
 
