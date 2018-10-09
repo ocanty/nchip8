@@ -10,12 +10,13 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <algorithm>
 
 gui::gui()
 {
     this->rebuild_windows();
     this->start_stream_redirection();
-    // std::cout << "[gui] init ncurses" << std::endl;
+    std::cout << "[gui] init ncurses" << std::endl;
     this->thread();
 }
 
@@ -26,8 +27,6 @@ gui::~gui()
 
 void gui::rebuild_windows()
 {
-    ::newterm(NULL, NULL, stdin);
-
     m_window = std::shared_ptr<::WINDOW>(::initscr(), ::wdelch);
     ::setlocale(LC_ALL," ");
     ::cbreak();
@@ -100,10 +99,26 @@ void gui::update_log_window()
 {
     if(m_log_window == nullptr) return;
 
+    // get height of log window and get its height minus its borders
+    int log_window_w = 0;
+    int log_window_h = 0;
 
-    //::wborder(m_log_window.get(), 0,0,0,0,0,0,0,0);
+    getmaxyx(m_log_window.get(),log_window_h,log_window_w);
 
-    //::wrefresh(m_log_window.get());
+    int height = log_window_h - 2;
+    int y = 1; // initial y coordinate (skipping border)
+
+    m_log.emplace_back("test");
+    int num_lines_to_show = std::min((int)m_log.size(),height);
+
+    for(auto iter = m_log.rbegin(); iter != m_log.rbegin()+num_lines_to_show; iter++)
+    {
+        ::mvprintw(y,1,(*iter).c_str());
+
+        y++;
+    }
+    ::wborder(m_log_window.get(), 0,0,0,0,0,0,0,0);
+    ::wrefresh(m_log_window.get());
 }
 
 void gui::start_stream_redirection()

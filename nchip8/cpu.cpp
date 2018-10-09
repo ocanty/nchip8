@@ -141,41 +141,243 @@ void cpu::set_u16(const std::uint16_t &addr, const std::uint16_t &val)
     m_ram[addr+1] = val & 0x00FF;
 }
 
-void cpu::add_op_handler(const std::array<std::optional<std::uint8_t>, 4>& encoding, const cpu::op_handler &handler)
+void cpu::add_op_handler(const cpu::op_handler& handler)
 {
     auto& root = m_op_tree;
 
-    if(!root.count(encoding[0])) root[encoding[0]] = { };
-    auto& node0 = root[encoding[0]];
+    if(!root.count(handler.m_encoding[0])) root[handler.m_encoding[0]] = { };
+    auto& node0 = root[handler.m_encoding[0]];
 
     // if a child doesnt exist create it
-    if(!node0.count(encoding[1])) node0[encoding[1]] = { };
-    auto& node1 = node0[encoding[0]];
+    if(!node0.count(handler.m_encoding[1])) node0[handler.m_encoding[1]] = { };
+    auto& node1 = node0[handler.m_encoding[0]];
 
     // if a child doesnt exist create it
-    if(!node1.count(encoding[2])) node1[encoding[2]] = { };
-    auto& node2 = node1[encoding[1]];
+    if(!node1.count(handler.m_encoding[2])) node1[handler.m_encoding[2]] = { };
+    auto& node2 = node1[handler.m_encoding[1]];
 
-    node2[encoding[3]] = op_handler{ };
+    node2[handler.m_encoding[3]] = op_handler{ };
 }
 
 void cpu::setup_op_handlers()
 {
-    this->add_op_handler(
-        { 0x1, std::nullopt, std::nullopt, std::nullopt }, // 0x1NNN
+    // 0x00EE RET
+    add_op_handler(
         op_handler
         {
+            { 0x0, 0x0, 0xE, 0xE },
+            [this](const cpu::operand_data& operands)
+            {
+                m_pc = this->m_stack[m_sp];
+                this->m_sp--;
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "RET" << std::hex << operands.m_nnn;
+            }
+        }
+    );
+
+
+    // 0x1nnn - JP addr
+    // Jump to location nnn.
+    add_op_handler
+    (
+        op_handler
+        {
+            { 0x1, std::nullopt, std::nullopt, std::nullopt },
             [this](const cpu::operand_data& operands)
             {
                 // JP 0x1NNN
                 this->m_pc = operands.m_nnn;
             },
 
-            [](const cpu::operand_data& operands) -> std::string
+            [](const cpu::operand_data& operands, std::stringstream& ss)
             {
-                std::stringstream ss;
                 ss << "JP 0x" << std::hex << operands.m_nnn;
-                return ss.str();
+            }
+        }
+    );
+
+    // 0x2nnn - CALL addr
+    // Call subroutine at nnn.
+    add_op_handler(
+        op_handler
+        {
+            { 0x2, std::nullopt, std::nullopt, std::nullopt },
+            [this](const cpu::operand_data& operands)
+            {
+                this->m_sp++;
+                this->m_stack[m_sp] = m_pc;
+                m_pc = operands.m_nnn;
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "CALL 0x" << std::hex << operands.m_nnn;
+            }
+        }
+    );
+
+    // 0x3xkk - SE Vx, byte
+    // Skip next instruction if Vx = kk.
+    add_op_handler(
+        op_handler
+        {
+            { 0x3, std::nullopt, std::nullopt, std::nullopt },
+            [this](const cpu::operand_data& operands)
+            {
+                if(m_gpr[operands.m_x] == operands.m_kk) this->m_pc += 0x2;
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "SE V" << std::hex << operands.m_x << ", " << operands.m_kk;
+            }
+        }
+    );
+
+    // 0x4xkk - SNE Vx, byte
+    // Skip next instruction if Vx != kk.
+    add_op_handler(
+        op_handler
+        {
+            { 0x4, std::nullopt, std::nullopt, std::nullopt },
+            [this](const cpu::operand_data& operands)
+            {
+                if(m_gpr[operands.m_x] != operands.m_kk) this->m_pc += 0x2;
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "SNE V" << std::hex << operands.m_x << ", " << operands.m_kk;
+            }
+        }
+    );
+
+    // 0x5xy0 - SE Vx, Vy
+    // Skip next instruction if Vx == Vy.
+    add_op_handler(
+        op_handler
+        {
+            { 0x5, std::nullopt, std::nullopt, std::nullopt },
+            [this](const cpu::operand_data& operands)
+            {
+                if(m_gpr[operands.m_x] == m_gpr[operands.m_y]) this->m_pc += 0x2;
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "SE V" << std::hex << operands.m_x << ", V" << operands.m_y;
+            }
+        }
+    );
+
+    // 0x6xkk - LD Vx, byte
+    // Set Vx = kk.
+    add_op_handler(
+        op_handler
+        {
+            { 0x6, std::nullopt, std::nullopt, std::nullopt },
+            [this](const cpu::operand_data& operands)
+            {
+                m_gpr[operands.m_x] = operands.m_kk;
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "LD V" << std::hex << operands.m_x << ", " << operands.m_kk;
+            }
+        }
+    );
+
+    // 0x7xkk - ADD Vx, byte
+    // Set Vx = Vx + kk
+    add_op_handler(
+        op_handler
+        {
+            { 0x7, std::nullopt, std::nullopt, std::nullopt },
+            [this](const cpu::operand_data& operands)
+            {
+                m_gpr[operands.m_x] += operands.m_kk;
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "ADD V" << std::hex << operands.m_x << ", " << operands.m_kk;
+            }
+        }
+    );
+
+    // 0x8xy0 - LD Vx, Vy
+    // Set Vx = Vy.
+    add_op_handler(
+        op_handler
+        {
+            { 0x8, std::nullopt, std::nullopt, 0x0 },
+            [this](const cpu::operand_data& operands)
+            {
+                m_gpr[operands.m_x] = m_gpr[operands.m_y];
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "LD V" << std::hex << operands.m_x << ", V" << operands.m_y;
+            }
+        }
+    );
+
+    // 0x8xy1 - OR Vx, Vy
+    // Set Vx = Vx OR Vy.
+    add_op_handler(
+        op_handler
+        {
+            { 0x8, std::nullopt, std::nullopt, 0x1 },
+            [this](const cpu::operand_data& operands)
+            {
+                m_gpr[operands.m_x] = m_gpr[operands.m_x] | m_gpr[operands.m_y];
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "OR V" << std::hex << operands.m_x << ", V" << operands.m_y;
+            }
+        }
+    );
+
+    // 0x8xy2 - AND Vx, Vy
+    // Set Vx = Vx AND Vy.
+    add_op_handler(
+        op_handler
+        {
+            { 0x8, std::nullopt, std::nullopt, 0x2 },
+            [this](const cpu::operand_data& operands)
+            {
+                m_gpr[operands.m_x] = m_gpr[operands.m_x] & m_gpr[operands.m_y];
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "AND V" << std::hex << operands.m_x << ", V" << operands.m_y;
+            }
+        }
+    );
+
+    // 0x8xy3 - XOR Vx, Vy
+    // Set Vx = Vx XOR Vy.
+    add_op_handler(
+        op_handler
+        {
+            { 0x8, std::nullopt, std::nullopt, 0x3 },
+            [this](const cpu::operand_data& operands)
+            {
+                m_gpr[operands.m_x] = m_gpr[operands.m_x] ^ m_gpr[operands.m_y];
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "XOR V" << std::hex << operands.m_x << ", V" << operands.m_y;
             }
         }
     );

@@ -81,12 +81,15 @@ private:
 
     //! @brief  A function that when called,
     //!         returns the disassembly string of the instruction
-    using func_dasm_op = std::function<void(const operand_data&)>;
+    using func_dasm_op = std::function<void(const operand_data&, std::stringstream&)>;
 
-    //! @brief  Container type to hold both functions that could process an instruction
-    //!         both an execution and a disassembly routine
+    //! @brief            Container type to hold both functions that could process an instruction
+    //!                   both an execution and a disassembly routine
+    //! @param m_encoding An array specifying the instruction encoding
+    //!                   e.g. 0x1NNN - { 0x1, std::nullopt, std::nullopt, std::nullopt }
     struct op_handler
     {
+        std::array<std::optional<std::uint8_t>, 4> m_encoding;
         func_execute_op  m_execute_op;
         func_dasm_op        m_dasm_op;
     };
@@ -107,13 +110,8 @@ private:
     std::optional<op_handler> get_op_handler_for_instruction(const std::uint16_t& instruction);
 
     //! @brief          Add an operation handler for an instruction into the handler tree
-    //! @param encoding An array specifying the instruction encoding
-    //!                 e.g. 0x1NNN - { 0x1, std::nullopt, std::nullopt, std::nullopt }
     //! @param handler  Handler structure, containing an execute and disassembly function
-    void add_op_handler(
-            const std::array<std::optional<std::uint8_t>, 4>& encoding,
-            const op_handler& handler
-        );
+    void add_op_handler(const op_handler& handler);
 
     //! @brief Add all the CHIP-8 operation handlers to the operation tree
     void setup_op_handlers();

@@ -52,7 +52,7 @@ nchip8::nchip8(const std::vector<std::string>& args)
     }
     std::cout << std::endl;
 
-    m_gui = std::make_unique<gui>();
+    //m_gui = std::make_unique<gui>();
     m_cpu_daemon = std::make_unique<cpu_daemon>();
 
     m_cpu_daemon->send_message(
