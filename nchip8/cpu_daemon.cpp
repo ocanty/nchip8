@@ -8,6 +8,7 @@
 cpu_daemon::cpu_daemon() :
     m_cpu_state(cpu_state::paused)
 {
+    // create enough space to hold the handlers for each type
     m_message_handlers.resize(cpu_daemon::cpu_message_type::_last);
 
     this->register_message_handler(cpu_message_type::LoadROM, [this](const cpu_message& msg)
@@ -18,7 +19,7 @@ cpu_daemon::cpu_daemon() :
         m_cpu.load_rom(msg.m_data, 0x200);
     });
 
-    this->register_message_handler(cpu_message_type::SetStateRunning,[this](const cpu_message& msg)
+    this->register_message_handler(cpu_message_type::SetStateRunning, [this](const cpu_message& msg)
     {
         std::cout << "[cpu_daemon] set cpu running";
         this->set_cpu_state(cpu_state::running);

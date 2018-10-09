@@ -8,7 +8,7 @@
 
 cpu::cpu()
 {
-
+    this->reset();
 }
 
 cpu::~cpu()
@@ -55,7 +55,7 @@ std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::ui
     std::cout << "Read operation -> " << std::hex << op << std::endl;
 
     // for an instruction 0xABCD
-    // we get each nibble, so nibble0 = 0xA, nibble1 = 0xB, etc...
+    // we get each nibble, so nibble0 = 0xA, nibble1 = 0xB
     std::uint8_t n3 = (op & 0x000F);
     std::uint8_t n2 = (op & 0x00F0) >> 4;
     std::uint8_t n1 = (op & 0x0F00) >> 8;
@@ -378,6 +378,30 @@ void cpu::setup_op_handlers()
             [](const cpu::operand_data& operands, std::stringstream& ss)
             {
                 ss << "XOR V" << std::hex << operands.m_x << ", V" << operands.m_y;
+            }
+        }
+    );
+
+    // 0x8xy4 - ADD Vx, Vy
+    // Set Vx = Vx + Vy.
+    // If the result is greater than 8 bits (i.e., > 255,) VF (carry) is set to 1, otherwise 0.
+    add_op_handler(
+        op_handler
+        {
+            { 0x8, std::nullopt, std::nullopt, 0x3 },
+            [this](const cpu::operand_data& operands)
+            {
+                std::uint16_t result = m_gpr[operands.m_x] + m_gpr[operands.m_y];
+
+                m_gpr[0xF] = 0;
+                if(result > 255) m_gpr[0xF] = 1;
+
+                m_gpr[operands.m_x] = result & 0x00FF; // remove upper 8 bits
+            },
+
+            [](const cpu::operand_data& operands, std::stringstream& ss)
+            {
+                ss << "ADD V" << std::hex << operands.m_x << ", V" << operands.m_y;
             }
         }
     );

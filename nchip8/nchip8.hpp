@@ -17,9 +17,6 @@ public:
     ~nchip8();
 
 private:
-//    //! @brief Constructs m_gui & m_cpu_daemon
-//    void modules_init();
-
     std::unique_ptr<gui> m_gui;
     std::unique_ptr<cpu_daemon> m_cpu_daemon;
 };
