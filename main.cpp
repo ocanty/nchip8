@@ -16,6 +16,7 @@ int main(int argc, char** argv)
         args.emplace_back(std::string(argv[i]));
     }
 
-    nchip8 app(args);
+    nchip8::nchip8_app app(args);
+    std::this_thread::sleep_for(std::chrono::hours(99999));
     return 0;
 }

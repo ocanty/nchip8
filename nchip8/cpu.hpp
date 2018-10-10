@@ -13,6 +13,9 @@
 #include <optional>
 #include <vector>
 
+namespace nchip8
+{
+
 //! The CHIP-8 interpreter core
 class cpu
 {
@@ -28,19 +31,19 @@ public:
     //! @param  rom         A vector of 8-bit ints of the raw rom data
     //! @param  address     The memory location to load the rom into
     //! @returns            true if loading was successful, false otherwise
-    bool load_rom(const std::vector<std::uint8_t>& rom, const std::uint16_t address);
+    bool load_rom(const std::vector<std::uint8_t> &rom, const std::uint16_t address);
 
     //! @brief Executes the current instruction at PC, (PC may jump or increment afterwards)
     void execute_op_at_pc();
 
-    //! @brief          Returns a disassembly of the instruction at PC
+    //! @brief          Returns a disassembly of the instruction at the supplied address
     //! @param address  The address of the instruction, must be correctly aligned
     //! @returns        Optional of string of disassembled instruction
-    std::optional<std::string> dasm_op(const std::uint16_t& address) const;
+    std::optional<std::string> dasm_op(const std::uint16_t &address) const;
 
 private:
     //! RAM
-    std::array<std::uint8_t,0x1000> m_ram;
+    std::array<std::uint8_t, 0x1000> m_ram;
 
     //! General Purpose Registers
     std::array<std::uint8_t, 16> m_gpr;
@@ -59,12 +62,12 @@ private:
 
     //! @brief          Reads a 16-bit value at the specified address
     //! @param address  The address
-    std::uint16_t read_u16(const std::uint16_t& address) const;
+    std::uint16_t read_u16(const std::uint16_t &address) const;
 
     //! @brief          Sets a 16-bit value at the specified address
     //! @param address  The address
     //! @param val      The new value
-    void set_u16(const std::uint16_t& address, const std::uint16_t& val);
+    void set_u16(const std::uint16_t &address, const std::uint16_t &val);
 
     //! @brief      The operand data that an instruction may have, passed to execute/dasm functions
     //! @details    CHIP-8 instruction breakdown:
@@ -74,35 +77,36 @@ private:
     //!             NNN, X, Y, KK, and N are considered operand values
     struct operand_data
     {
-        std::uint16_t     m_nnn; //! 0xANNN where A is part of opcode and NNN is data
-        std::uint8_t      m_x;   //! 0xAXAA where A is part of opcode and X is data
-        std::uint8_t      m_y;   //! 0xAAYA where A is part of opcode and Y is data
-        std::uint8_t      m_kk;  //! 0xAAKK where A is part of opcode and KK is data
-        std::uint8_t      m_n;   //! 0xAAAN where A is part of opcode and N is data
+        std::uint16_t m_nnn; //! 0xANNN where A is part of opcode and NNN is data
+        std::uint8_t m_x;   //! 0xAXAA where A is part of opcode and X is data
+        std::uint8_t m_y;   //! 0xAAYA where A is part of opcode and Y is data
+        std::uint8_t m_kk;  //! 0xAAKK where A is part of opcode and KK is data
+        std::uint8_t m_n;   //! 0xAAAN where A is part of opcode and N is data
     };
 
     //! @brief  A function type that when executed,
     //!         should process the instruction operation and update the relevant parts of the CPU
-    using func_execute_op = std::function<void(const std::unique_ptr<cpu>&, const operand_data&)>;
+    using func_execute_op = std::function<void(cpu &, const operand_data &)>;
 
     //! @brief  A function that when called,
     //!         returns the disassembly string of the instruction
-    using func_dasm_op = std::function<void(const operand_data&, std::stringstream&)>;
+    using func_dasm_op = std::function<void(const operand_data &, std::stringstream &)>;
 
-    //! @brief            Container type to hold both functions that could process an instruction
-    //!                   both an execution and a disassembly routine
-    class op_handler
+    //! @brief Container type to hold both functions that could process an instruction
+    //!        both an execution and a disassembly routine
+    struct op_handler
     {
         //! An array specifying the instruction encoding, operand data is indexed by std::nullopt
         //! e.g. 0x1NNN - { 0x1, std::nullopt, std::nullopt, std::nullopt }
         std::array<std::optional<std::uint8_t>, 4> m_encoding;
 
         //! @see func_execute_op
-        func_execute_op  m_execute_op;
+        func_execute_op m_execute_op;
 
         //! @see func_dasm_op
-        func_dasm_op        m_dasm_op;
+        func_dasm_op m_dasm_op;
     };
+
     friend class op_handler; //! We allow operations to access data in CPU (i.e its private members)
 
     //! @brief      The operation handler tree
@@ -120,11 +124,11 @@ private:
     //! @brief          Returns the operation handler for an instruction
     //! @param address  The encoded instruction (i.e 0X1200 - JP 200)
     //! @returns        Optional of operation handler if successful, std::nullopt if false
-    std::optional<op_handler> get_op_handler_for_instruction(const std::uint16_t& instruction);
+    std::optional<op_handler> get_op_handler_for_instruction(const std::uint16_t &instruction);
 
     //! @brief          Add an operation handler for an instruction into the handler tree
     //! @param handler  Handler structure, containing an execute and disassembly function
-    void add_op_handler(const op_handler& handler);
+    void add_op_handler(const op_handler &handler);
 
     /* Begin operation handlers
        Why are these not stored inside an array? We want to alias them.
@@ -173,5 +177,6 @@ private:
 
 };
 
+}
 
 #endif //CHIP8_NCURSES_CPU_HPP

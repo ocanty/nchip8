@@ -7,19 +7,28 @@
 
 #include <memory>
 #include <vector>
+
+#include "io.hpp"
 #include "cpu_daemon.hpp"
 #include "gui.hpp"
 
-class nchip8
+namespace nchip8
+{
+
+class nchip8_app
 {
 public:
-    nchip8(const std::vector<std::string>& args);
-    ~nchip8();
+    nchip8_app(const std::vector<std::string> &args);
+
+    ~nchip8_app();
 
 private:
+    void process_arguments();
+
     std::unique_ptr<gui> m_gui;
     std::unique_ptr<cpu_daemon> m_cpu_daemon;
 };
 
+}
 
 #endif //CHIP8_NCURSES_NCHIP8_HPP

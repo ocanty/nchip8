@@ -18,7 +18,7 @@ add_executable(nchip8
         nchip8/gui.hpp
         nchip8/nchip8.cpp
         nchip8/nchip8.hpp
-        )
+        nchip8/op_handlers.cpp nchip8/io.hpp nchip8/io.cpp)
 
 
 target_link_libraries (nchip8 ${ncurses++_LIBRARIES} )

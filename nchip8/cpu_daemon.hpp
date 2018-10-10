@@ -15,6 +15,9 @@
 
 #include "cpu.hpp"
 
+namespace nchip8
+{
+
 //! @brief  The cpu_daemon creates the cpu thread,
 //!         passes messages to the cpu and controls it's state
 //!         e.g. calling for an instruction to be executed or not
@@ -22,6 +25,7 @@ class cpu_daemon
 {
 public:
     cpu_daemon();
+
     ~cpu_daemon();
 
     //! @brief Message type of message to be passed to cpu
@@ -48,16 +52,16 @@ public:
     };
 
     //! A function of this type is called when the CPU receives a message
-    using cpu_message_handler = std::function<void(const cpu_message&)>;
+    using cpu_message_handler = std::function<void(const cpu_message &)>;
 
-    //! @brief          Send a message to the cpu
+    //! @brief          Send a message to the cpu thread
     //! @param message  The cpu_message structure
-    void send_message(const cpu_message&);
+    void send_message(const cpu_message &);
 
     //! @brief      Register a message handler to be called in the cpu thread when it receives a message
     //! @param type Message type
     //! @param hdl  Message handler container
-    void register_message_handler(const cpu_message_type& type, const cpu_message_handler& hdl);
+    void register_message_handler(const cpu_message_type &type, const cpu_message_handler &hdl);
 
     //! CPU state enumeration
     enum cpu_state
@@ -71,9 +75,9 @@ public:
     cpu_state get_cpu_state() const;
 
     //! @brief Set cpu_state
-    void set_cpu_state(const cpu_state&);
+    void set_cpu_state(const cpu_state &);
 
-    std::vector<bool>& get_screen();
+    std::vector<bool> &get_screen();
 
 private:
     //! CPU instance
@@ -82,6 +86,7 @@ private:
     cpu_state m_cpu_state;
 
     std::thread m_cpu_thread;
+
     void cpu_thread();
 
     //! Locked when a message is being passed, or handled
@@ -93,5 +98,5 @@ private:
     std::vector<std::vector<cpu_message_handler>> m_message_handlers;
 };
 
-
+}
 #endif //CHIP8_NCURSES_CPU_DAEMON_HPP
