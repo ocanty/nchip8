@@ -146,7 +146,7 @@ private:
     static op_handler LD_VX_KK;     // 6xkk - LD Vx, byte
     static op_handler ADD_VX_KK;    // 7xkk - ADD Vx, byte
     static op_handler LD_VX_VY;     // 8xy0 - LD Vx, Vy
-    static op_handler OR_VX_Y;      // 8xy1 - OR Vx, Vy
+    static op_handler OR_VX_VY;      // 8xy1 - OR Vx, Vy
     static op_handler AND_VX_VY;    // 8xy2 - AND Vx, Vy
     static op_handler XOR_VX_VY;    // 8xy3 - XOR Vx, Vy
     static op_handler ADD_VX_VY;    // 8xy4 - ADD Vx, Vy

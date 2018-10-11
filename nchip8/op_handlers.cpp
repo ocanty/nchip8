@@ -8,6 +8,7 @@
 #include <sstream>
 #include <iostream>
 #include "cpu.hpp"
+#include "io.hpp"
 
 // This file includes implementations of the static cpu:: op_handlers
 
@@ -46,7 +47,186 @@ cpu::op_handler cpu::JP
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
     {
-        ss << "JP 0x" << std::hex << operands.m_nnn;
+        ss << "JP " << nchip8::nnn << operands.m_nnn;
+    }
+};
+
+cpu::op_handler cpu::CALL
+{
+    { 0x2, DATA, DATA, DATA },
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        cpu.m_sp++;
+        cpu.m_stack[cpu.m_sp] = cpu.m_pc;
+        cpu.m_pc = operands.m_nnn;
+    },
+
+    [](const cpu::operand_data& operands, std::stringstream& ss)
+    {
+        ss << "CALL " << nchip8::nnn << operands.m_nnn;
+    }
+};
+
+// 0x3xkk - SE Vx, byte
+// Skip next instruction if Vx = kk.
+cpu::op_handler cpu::SE_VX_KK
+{
+    { 0x3, DATA, DATA, DATA },
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        if(cpu.m_gpr[operands.m_x] == operands.m_kk) cpu.m_pc += 0x2;
+    },
+
+    [](const cpu::operand_data& operands, std::stringstream& ss)
+    {
+        ss << "SE V" << nchip8::x << operands.m_x << ", " <<  nchip8::kk << operands.m_kk;
+    }
+};
+
+// 0x4xkk - SNE Vx, byte
+// Skip next instruction if Vx != kk.
+cpu::op_handler cpu::SNE_VX_KK
+{
+    { 0x4, DATA, DATA, DATA },
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        if(cpu.m_gpr[operands.m_x] != operands.m_kk) cpu.m_pc += 0x2;
+    },
+
+    [](const cpu::operand_data& operands, std::stringstream& ss)
+    {
+        ss << "SNE V" << nchip8::x << operands.m_x << ", " << nchip8::kk << operands.m_kk;
+    }
+};
+
+// 0x5xy0 - SE Vx, Vy
+// Skip next instruction if Vx == Vy.
+cpu::op_handler cpu::SE_VX_VY
+{
+    { 0x5, DATA, DATA, 0x0 },
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        if(cpu.m_gpr[operands.m_x] == cpu.m_gpr[operands.m_y]) cpu.m_pc += 0x2;
+    },
+
+    [](const cpu::operand_data& operands, std::stringstream& ss)
+    {
+        ss << "SE V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+    }
+};
+
+// 0x6xkk - LD Vx, byte
+// Set Vx = kk.
+cpu::op_handler cpu::LD_VX_KK
+{
+    { 0x6, DATA, DATA, DATA },
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        cpu.m_gpr[operands.m_x] = operands.m_kk;
+    },
+    [](const cpu::operand_data& operands, std::stringstream& ss)
+    {
+        ss << "LD V" << nchip8::x << operands.m_x << ", " << nchip8::kk << operands.m_kk;
+    }
+};
+
+// 0x7xkk - ADD Vx, byte
+// Set Vx = Vx + kk
+cpu::op_handler cpu::ADD_VX_KK
+{
+    { 0x7, DATA, DATA, DATA },
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        cpu.m_gpr[operands.m_x] += operands.m_kk;
+    },
+    [](const cpu::operand_data& operands, std::stringstream& ss)
+    {
+        ss << "ADD V" << nchip8::x << operands.m_x << ", " << nchip8::kk << operands.m_kk;
+    }
+};
+
+// 0x8xy0 - LD Vx, Vy
+// Set Vx = Vy.
+cpu::op_handler cpu::LD_VX_VY
+{
+    { 0x8, DATA, DATA, 0x0 },
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        cpu.m_gpr[operands.m_x] = cpu.m_gpr[operands.m_y];
+    },
+    [](const cpu::operand_data& operands, std::stringstream& ss)
+    {
+        ss << "LD V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+    }
+};
+
+// 0x8xy1 - OR Vx, Vy
+// Set Vx = Vx OR Vy.
+cpu::op_handler cpu::OR_VX_VY
+{
+    { 0x8, DATA, DATA, 0x1 },
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        cpu.m_gpr[operands.m_x] = cpu.m_gpr[operands.m_x] | cpu.m_gpr[operands.m_y];
+    },
+
+    [](const cpu::operand_data& operands, std::stringstream& ss)
+    {
+        ss << "OR V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+    }
+};
+
+// 0x8xy2 - AND Vx, Vy
+// Set Vx = Vx AND Vy.
+cpu::op_handler cpu::AND_VX_VY
+{
+    { 0x8, DATA, DATA, 0x1 },
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        cpu.m_gpr[operands.m_x] = cpu.m_gpr[operands.m_x] & cpu.m_gpr[operands.m_y];
+    },
+
+    [](const cpu::operand_data& operands, std::stringstream& ss)
+    {
+        ss << "AND V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+    }
+};
+
+// 0x8xy3 - XOR Vx, Vy
+// Set Vx = Vx XOR Vy.
+cpu::op_handler cpu::XOR_VX_VY
+{
+    { 0x8, DATA, DATA, 0x1 },
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        cpu.m_gpr[operands.m_x] = cpu.m_gpr[operands.m_x] ^ cpu.m_gpr[operands.m_y];
+    },
+
+    [](const cpu::operand_data& operands, std::stringstream& ss)
+    {
+        ss << "XOR V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+    }
+};
+
+// 0x8xy4 - ADD Vx, Vy
+// Set Vx = Vx + Vy.
+// If the result is greater than 8 bits (i.e., > 255,) VF (carry) is set to 1, other
+cpu::op_handler cpu::ADD_VX_VY
+{
+    { 0x8, std::nullopt, std::nullopt, 0x3 },
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        std::uint16_t result = cpu.m_gpr[operands.m_x] + cpu.m_gpr[operands.m_y];
+
+        cpu.m_gpr[0xF] = 0;
+        if(result > 255) cpu.m_gpr[0xF] = 1;
+
+        cpu.m_gpr[operands.m_x] = result & 0x00FF; // remove upper 8 bits
+    },
+
+    [](const cpu::operand_data& operands, std::stringstream& ss)
+    {
+        ss << "ADD V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
     }
 };
 
