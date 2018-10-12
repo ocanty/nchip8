@@ -5,6 +5,8 @@
 #include "cpu.hpp"
 #include <iostream>
 #include <sstream>
+#include <tuple>
+#include <utility>
 
 namespace nchip8
 {
@@ -22,8 +24,6 @@ cpu::~cpu()
 
 void cpu::reset()
 {
-    //std::cout << "[cpu] reset" << std::endl;
-
     m_gpr.fill(0);
     m_ram.fill(0xCC);
 
@@ -34,18 +34,14 @@ void cpu::reset()
 
 bool cpu::load_rom(const std::vector<std::uint8_t> &rom, const uint16_t load_addr)
 {
-    std::cout << "[cpu] loading rom" << std::endl;
-
     // Make sure the rom does not exceed typical loading size
     // Make sure it'l fit into the remainder of memory from it's load point
     if (rom.size() < 0xE00 && (load_addr + rom.size()) < 0x1000)
     {
         std::copy_n(rom.begin(), rom.size(), m_ram.begin() + load_addr);
-        //std::cout << "[cpu] loading rom succeeded :)" << std::endl;
         return true;
     }
 
-    std::cout << "[cpu] loading rom failed :(" << std::endl;
     return false;
 }
 
@@ -68,10 +64,8 @@ std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::ui
     {
         auto &node0 = m_op_tree[n0];
 
-        std::cout << node0.count(n1) << " " << node0.count(std::nullopt) << std::endl;
-
         // if we cant find a node that contains the next nibble
-        // and cant find operaznd data (optional type), there is no handler, return nothing
+        // and cant find operand data (optional type), there is no handler, return nothing
         if (!node0.count(n1) && !node0.count(std::nullopt)) return std::nullopt;
         auto &node1 = (node0.count(n1) ? node0[n1] : node0[std::nullopt]);
 
@@ -105,19 +99,16 @@ void cpu::execute_op_at_pc()
         // now extract the vars from the instruction in order to supply to the handlers
 
         operand_data operands;
-        operands.m_nnn = (instruction & 0x0FFF);
-        operands.m_x = (instruction & 0x0F00) >> 8;
-        operands.m_y = (instruction & 0x00F0) >> 4;
-        operands.m_kk = (instruction & 0x00FF);
-        operands.m_n = (instruction & 0x000F);
+        operands.m_nnn  = (instruction & 0x0FFF);
+        operands.m_x    = (instruction & 0x0F00) >> 8;
+        operands.m_y    = (instruction & 0x00F0) >> 4;
+        operands.m_kk   = (instruction & 0x00FF);
+        operands.m_n    = (instruction & 0x000F);
 
-        std::cout << "got a handler" << std::endl;
         handler.value().m_execute_op(*this,operands);
 
         return;
     }
-
-    //std::cout << "Illegal instruction :(" << std::endl;
 }
 
 std::optional<std::string> cpu::dasm_op(const std::uint16_t& address) const
@@ -138,22 +129,21 @@ void cpu::set_u16(const std::uint16_t &addr, const std::uint16_t &val)
     m_ram[addr + 1] = val & 0x00FF;
 }
 
-void cpu::add_op_handler(const cpu::op_handler &handler)
+bool cpu::add_op_handler(const cpu::op_handler &handler)
 {
-    auto &root = m_op_tree;
+    auto& root = m_op_tree;
 
-    if (!root.count(handler.m_encoding[0])) root[handler.m_encoding[0]] = {};
-    auto &node0 = root[handler.m_encoding[0]];
+    // add a node to the tree if we don't have one
+    // see: https://en.cppreference.com/w/cpp/container/unordered_map/try_emplace
+    // try_emplace supports perfect forwarding and inserting the nested map ( {} )
+    // doesn't need args for it's constructor, we don't supply them
+    auto [node_0_iter, node_0_success] = root.try_emplace(handler.m_encoding[0]);
+    auto [node_1_iter, node_1_success] = node_0_iter->second.try_emplace(handler.m_encoding[1]);
+    auto [node_2_iter, node_2_success] = node_1_iter->second.try_emplace(handler.m_encoding[2]);
 
-    // if a child doesnt exist create it
-    if (!node0.count(handler.m_encoding[1])) node0[handler.m_encoding[1]] = {};
-    auto &node1 = node0[handler.m_encoding[1]];
+    auto [iter, success] = node_2_iter->second.try_emplace(handler.m_encoding[3], handler);
 
-    // if a child doesnt exist create it
-    if (!node1.count(handler.m_encoding[2])) node1[handler.m_encoding[2]] = {};
-    auto &node2 = node1[handler.m_encoding[2]];
-
-    node2[handler.m_encoding[3]] = handler;
+    return success;
 }
 
 void cpu::setup_op_handlers()

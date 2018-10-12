@@ -79,10 +79,10 @@ private:
     struct operand_data
     {
         std::uint16_t m_nnn; //! 0xANNN where A is part of opcode and NNN is data
-        std::uint8_t m_x;   //! 0xAXAA where A is part of opcode and X is data
-        std::uint8_t m_y;   //! 0xAAYA where A is part of opcode and Y is data
-        std::uint8_t m_kk;  //! 0xAAKK where A is part of opcode and KK is data
-        std::uint8_t m_n;   //! 0xAAAN where A is part of opcode and N is data
+        std::uint8_t m_x;    //! 0xAXAA where A is part of opcode and X is data
+        std::uint8_t m_y;    //! 0xAAYA where A is part of opcode and Y is data
+        std::uint8_t m_kk;   //! 0xAAKK where A is part of opcode and KK is data
+        std::uint8_t m_n;    //! 0xAAAN where A is part of opcode and N is data
     };
 
     //! @brief  A function type that when executed,
@@ -129,7 +129,7 @@ private:
 
     //! @brief          Add an operation handler for an instruction into the handler tree
     //! @param handler  Handler structure, containing an execute and disassembly function
-    void add_op_handler(const op_handler &handler);
+    bool add_op_handler(const op_handler &handler);
 
     /* Begin operation handlers
        Why are these not stored inside an array? We want to alias them.

@@ -76,9 +76,11 @@ void gui::loop()
     {
         update_windows_on_resize();
         update_log_on_global_log_change();
-
+        char a = (char)(32+(rand()%(127-32)));
+        ::mvwprintw(m_log_window.get(), 2, 2, &a);
+        ::wrefresh(m_log_window.get());
         // dont eat cpu
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000/60));
     }
 }
 
@@ -88,8 +90,9 @@ void gui::update_log_on_global_log_change()
 //    {
 //        static std::string line;
 //
-//        while (std::getline(nchip8::log, line) && nchip8::log.good() && !nchip8::log.eof())
+//        while (nchip8::log.good() && !nchip8::log.eof())
 //        {
+//            std::getline(nchip8::log, line)
 //            m_gui_log.push_back(line);
 //            line.clear();
 //        }

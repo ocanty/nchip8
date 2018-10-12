@@ -30,6 +30,7 @@ private:
     //! Main window height
     int m_window_h = 0;
 
+    //! Pointers ot the ncurses windows
     std::shared_ptr<::WINDOW> m_window          = nullptr;
     std::shared_ptr<::WINDOW> m_screen_window   = nullptr;
     std::shared_ptr<::WINDOW> m_log_window      = nullptr;

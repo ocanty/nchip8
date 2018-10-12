@@ -8,6 +8,8 @@
 #include <sstream>
 #include <iostream>
 #include <bitset>
+#include <random>
+
 #include "cpu.hpp"
 #include "io.hpp"
 
@@ -343,7 +345,6 @@ cpu::op_handler cpu::LD_I_NNN
     {0xA, DATA, DATA, DATA},
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        // JP 0x1NNN
         cpu.m_i = operands.m_nnn;
     },
 
@@ -355,18 +356,36 @@ cpu::op_handler cpu::LD_I_NNN
 
 // Bnnn - JP V0, addr
 // Jump to location nnn + V0.
-cpu::op_handler cpu::LD_I_NNN
+cpu::op_handler cpu::JP_V0_NNN
 {
     {0xB, DATA, DATA, DATA},
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        // JP 0x1NNN
         cpu.m_pc = operands.m_nnn + cpu.m_gpr[0x0];
     },
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
     {
         ss << "JP V0, " << nchip8::nnn << operands.m_nnn;
+    }
+};
+
+// Cxkk - RND Vx, byte
+// Set Vx = random byte AND kk.
+cpu::op_handler cpu::RND_VX_KK
+{
+    {0xC, DATA, DATA, DATA},
+    [](cpu &cpu, const cpu::operand_data &operands)
+    {
+        static std::default_random_engine random(std::random_device{}());
+        static std::uniform_int_distribution<std::uint8_t> dist{ 0, 255 };
+
+        cpu.m_gpr[operands.m_x] = (dist(random) & operands.m_kk);
+    },
+
+    [](const cpu::operand_data &operands, std::stringstream &ss)
+    {
+        ss << "RND V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
     }
 };
 
