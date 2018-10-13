@@ -25,6 +25,7 @@ cpu::~cpu()
 
 void cpu::reset()
 {
+    // clear registers and memory
     m_gpr.fill(0);
     m_ram.fill(0xCC);
 
@@ -84,20 +85,22 @@ std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::ui
 
     if (root.count(n0) > 0)
     {
-        auto &node0 = m_op_tree[n0];
+        auto &node0 = m_op_tree.at(n0);
 
         // if we cant find a node that contains the next nibble
         // and cant find operand data (optional type), there is no handler, return nothing
         if (!node0.count(n1) && !node0.count(std::nullopt)) return std::nullopt;
-        auto &node1 = (node0.count(n1) ? node0[n1] : node0[std::nullopt]);
+
+        // our next node is either indexed by an instruction nibble or an operand data (optional type)
+        auto &node1 = (node0.count(n1) ? node0.at(n1) : node0.at(std::nullopt));
 
         // repeat for next node
         if (!node1.count(n2) && !node1.count(std::nullopt)) return std::nullopt;
-        auto &node2 = (node1.count(n2) ? node1[n2] : node1[std::nullopt]);
+        auto &node2 = (node1.count(n2) ? node1.at(n2) : node1.at(std::nullopt));
 
         // repeat for next node
         if (!node2.count(n3) && !node2.count(std::nullopt)) return std::nullopt;
-        auto &node3 = (node2.count(n3) ? node2[n3] : node2[std::nullopt]);
+        auto &node3 = (node2.count(n3) ? node2.at(n3) : node2.at(std::nullopt));
 
         return node3; // the op_handler at the lowest leaf of the tree
     }
@@ -108,17 +111,19 @@ std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::ui
 
 cpu::operand_data cpu::get_operand_data_from_instruction(const std::uint16_t& instruction) const
 {
+    // extract operand data from 0xABCD
     operand_data operands;
-    operands.m_nnn  = (instruction & 0x0FFF);
-    operands.m_x    = (instruction & 0x0F00) >> 8;
-    operands.m_y    = (instruction & 0x00F0) >> 4;
-    operands.m_kk   = (instruction & 0x00FF);
-    operands.m_n    = (instruction & 0x000F);
+    operands.m_nnn  = (instruction & 0x0FFF);       // 0xANNN
+    operands.m_x    = (instruction & 0x0F00) >> 8;  // 0xAXCD
+    operands.m_y    = (instruction & 0x00F0) >> 4;  // 0xABYD
+    operands.m_kk   = (instruction & 0x00FF);       // 0xABKK
+    operands.m_n    = (instruction & 0x000F);       // 0xABCN
     return operands;
 }
 
 void cpu::execute_op_at_pc()
 {
+    // read the encoded instruction
     std::uint16_t instruction = this->read_u16(this->m_pc);
 
     // get an operation handler for the instruction at PC
@@ -188,7 +193,7 @@ void cpu::set_screen_mode(const cpu::screen_mode &mode)
     m_screen_mode = mode;
 }
 
-bool cpu::get_screen_xy(const std::uint8_t &x, std::uint8_t &y) const
+bool cpu::get_screen_xy(const std::uint8_t &x, const std::uint8_t &y) const
 {
      // https://stackoverflow.com/a/2151141 : width * row + col
     auto width = (get_screen_mode() == screen_mode::hires_sc8) ? 128 : 64;

@@ -57,6 +57,8 @@ public:
     //! @details    Screen array is ALWAYS the hires size, even if cpu is lores mode
     const std::array<bool, 128*64>& get_screen_framebuffer() const;
 
+    //! @brief Get's the status of a pixel on the screen (on/off)
+    bool get_screen_xy(const std::uint8_t&x , const std::uint8_t& y) const;
 
 private:
     //! Screen
@@ -65,9 +67,6 @@ private:
 
     //! @brief Set screen mode of CPU
     void set_screen_mode(const screen_mode& mode);
-
-    //! @brief Get's the status of a pixel on the screen (on/off)
-    inline bool get_screen_xy(const std::uint8_t&x , std::uint8_t& y) const;
 
     //! @brief Set's the status of a pixel on the screen
     inline void set_screen_xy(const std::uint8_t& x, const std::uint8_t& y, const bool& set);

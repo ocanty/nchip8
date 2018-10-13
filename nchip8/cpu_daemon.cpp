@@ -113,4 +113,9 @@ const std::array<bool, 128 * 64> &cpu_daemon::get_screen_framebuffer() const
     return m_cpu.get_screen_framebuffer();
 }
 
+bool cpu_daemon::get_screen_xy(const std::uint8_t &x, const std::uint8_t &y) const
+{
+    return m_cpu.get_screen_xy(x,y);
+}
+
 }

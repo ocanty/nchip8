@@ -126,6 +126,8 @@ public:
     //! @details    Screen array is ALWAYS the hires size, even if cpu is
     const std::array<bool, 128*64>& get_screen_framebuffer() const;
 
+    //! @brief Get's the status of a pixel on the screen (on/off)
+    bool get_screen_xy(const std::uint8_t&x , const std::uint8_t& y) const;
 
 private:
     //! CPU instance

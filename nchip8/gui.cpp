@@ -42,10 +42,10 @@ void gui::rebuild_windows()
     ::wborder(m_window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
     getmaxyx(m_window.get(), m_window_h, m_window_w);
 
+
     m_screen_window = std::shared_ptr<::WINDOW>(::newwin(16 + 2, 64 + 2, 0, 1), ::wdelch);
     ::wborder(m_screen_window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
     ::wrefresh(m_screen_window.get());
-
 
     m_log_window = std::shared_ptr<::WINDOW>(::newwin(m_window_h - 18, 64 + 2, 18, 1), ::wdelch);
     ::wborder(m_log_window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
@@ -76,6 +76,8 @@ void gui::loop()
     {
         update_windows_on_resize();
         update_log_on_global_log_change();
+        update_screen_window();
+
         // dont eat cpu
         std::this_thread::sleep_for(std::chrono::milliseconds(1000/60));
     }
@@ -124,8 +126,45 @@ void gui::update_log_window()
     ::wrefresh(m_log_window.get());
 }
 
-void gui::update_screen()
+void gui::update_screen_window()
 {
+    if(!m_cpu_daemon || !m_screen_window) return;
+
+    auto mode = m_cpu_daemon->get_screen_mode();
+
+    // We need to convert screen pixels to block level elements
+    // It's important to realise that we are not simply representing a pixel by 1 block
+    // We are compressing the 2 rows of pixels into 1 line of characters
+    // ▄ to represent the top pixel being off, the bottom on
+
+    // ▀ to represent the bottom pixel being off, the top on
+    // █ to represent 2 pixels above each-other
+
+    std::uint8_t width = (mode == cpu::screen_mode::hires_sc8 ? 128 : 64);
+    std::uint8_t height = (mode == cpu::screen_mode::lores_c8 ? 64 : 32);
+
+    std::uint8_t draw_y = 1; // start at 1 to avoid border of the window
+    std::string line;
+
+    for(std::uint8_t y = 0; y < height; y += 2)
+    {
+        line.clear();
+
+        for(std::uint8_t x = 0; x < width; x += 2)
+        {
+            bool set_top = m_cpu_daemon->get_screen_xy(x,y);
+
+            std::uint8_t nextrow_y = y+1;
+            bool set_bottom = m_cpu_daemon->get_screen_xy(x,nextrow_y);
+
+            if(set_top&&set_bottom)     { line += "█"; continue; }
+            if(set_top)                 { line += "▀"; continue; }
+            if(set_bottom)              { line += "▄"; continue;}
+        }
+
+        ::mvwprintw(m_screen_window.get(), draw_y, 1, line.c_str());
+        draw_y++;
+    }
 
 }
 

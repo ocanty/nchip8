@@ -38,7 +38,7 @@ private:
     //! Main window height
     int m_window_h = 0;
 
-    //! Pointers ot the ncurses windows
+    //! Pointers to the ncurses windows
     std::shared_ptr<::WINDOW> m_window          = nullptr;
     std::shared_ptr<::WINDOW> m_screen_window   = nullptr;
     std::shared_ptr<::WINDOW> m_log_window      = nullptr;
@@ -55,6 +55,9 @@ private:
 
     //! @brief Draws log from m_gui_log
     void update_log_window();
+
+    //! @brief Updates the screen if the gui is attached to a cpu_daemon
+    void update_screen_window();
 
     //! @brief Redraw's all the windows to the current terminal height and width
     void rebuild_windows();
