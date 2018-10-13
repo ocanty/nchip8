@@ -44,8 +44,6 @@ cpu::op_handler cpu::JP
     {0x1, DATA, DATA, DATA},
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        // JP 0x1NNN
-        std::cout << "hello!" << std::endl;
         cpu.m_pc = operands.m_nnn;
     },
 
@@ -388,7 +386,6 @@ cpu::op_handler cpu::RND_VX_KK
         ss << "RND V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
     }
 };
-
 
 }
 #endif //NCHIP8_OP_HANDLERS_HPP

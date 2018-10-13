@@ -16,7 +16,7 @@ namespace nchip8
 //! @details NOT thread-safe!
 //! @see io.cpp
 //! @see gui.hpp, update_logs_on_global_log_change is what empties this log to gui
-extern std::ostream& log;
+extern std::stringstream log;
 
 std::ostream& nnn(std::ostream& out);
 std::ostream& n(std::ostream& out);

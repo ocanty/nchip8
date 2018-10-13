@@ -7,7 +7,7 @@
 namespace nchip8
 {
 
-std::ostream& log = std::cout; //std::stringstream log;
+std::stringstream log;
 
 std::ostream& nnn(std::ostream& out)
 {

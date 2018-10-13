@@ -3,6 +3,7 @@
 //
 
 #include "nchip8.hpp"
+#include "io.hpp"
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -49,7 +50,7 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args)
         // we cast to int because passing a char to cout usually shows its ASCII representation
         // we want instead to keep the numeric view
         // we also remove the high bits if they're extended by the cast
-        // nchip8::log << std::hex << std::setw(2) << std::setfill('0') << (0x000000FF & (std::uint32_t(byte))) << " ";
+        nchip8::log << std::hex << std::setw(2) << std::setfill('0') << (0x000000FF & (std::uint32_t(byte))) << " ";
 
         // if the byte count has been reset, add a newline
         if (byte_count == 0)
@@ -60,8 +61,7 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args)
 
     nchip8::log << std::endl;
 
-    m_gui = std::make_unique<gui>();
-    m_cpu_daemon = std::make_unique<cpu_daemon>();
+    m_cpu_daemon = std::make_shared<cpu_daemon>();
 
     m_cpu_daemon->send_message({
         cpu_daemon::cpu_message_type::LoadROM,
@@ -74,15 +74,19 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args)
     );
 
     m_cpu_daemon->send_message(
+        {
+            cpu_daemon::cpu_message_type::SetStateRunning,
+            {},
+            []()
             {
-                    cpu_daemon::cpu_message_type::SetStateRunning,
-                    {},
-                    []()
-                    {
-                        //nchip8::log << "you fucked up" << std::endl;
-                    }
+                //nchip8::log << "you fucked up" << std::endl;
             }
+        }
     );
+
+    m_gui = std::make_unique<gui>();
+    m_gui->set_cpu_target(m_cpu_daemon);
+    m_gui->loop(); // this is blocking
 
 }
 

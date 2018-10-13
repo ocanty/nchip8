@@ -10,6 +10,8 @@
 #include <vector>
 #include <memory>
 
+#include "cpu_daemon.hpp"
+
 namespace nchip8
 {
 
@@ -20,9 +22,15 @@ public:
 
     ~gui();
 
-private:
-    //! @brief This should block the main thread, update drawings for view
+    //! @brief Start the GUI logic thread, this will block input and the main thread!
     void loop();
+
+    //! @brief Set the cpu (via it's daemon)
+    //!         that the GUI will display the screen, disassembly & status of
+    void set_cpu_target(const std::shared_ptr<cpu_daemon>&);
+
+private:
+    std::shared_ptr<cpu_daemon> m_cpu_daemon;
 
     //! Main window width
     int m_window_w = 0;
@@ -38,14 +46,14 @@ private:
     //! @brief  Rebuilds window when a size change is detected
     void update_windows_on_resize();
 
-
     //! The local, gui log (the one drawn by the gui)
     std::vector<std::string> m_gui_log;
 
     //! @brief  Checks if data has been written to the global log,
-    //!         pushes it to gui log and redraws the window
+    //!         pushes it to m_gui_log and redraws the window
     void update_log_on_global_log_change();
 
+    //! @brief Draws log from m_gui_log
     void update_log_window();
 
     //! @brief Redraw's all the windows to the current terminal height and width

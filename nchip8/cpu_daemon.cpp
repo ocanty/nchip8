@@ -3,20 +3,20 @@
 //
 
 #include "cpu_daemon.hpp"
-#include <iostream>
+#include "io.hpp"
 
 namespace nchip8
 {
 
 cpu_daemon::cpu_daemon() :
-        m_cpu_state(cpu_state::paused)
+    m_cpu_state(cpu_state::paused)
 {
     // create enough space to hold the handlers for each type
     m_message_handlers.resize(cpu_daemon::cpu_message_type::_last);
 
     this->register_message_handler(cpu_message_type::LoadROM, [this](const cpu_message &msg)
     {
-        std::cout << "[cpu_daemon] received rom: " << msg.m_data.size() << " bytes " << std::endl;
+        nchip8::log << "[cpu_daemon] received rom: " << msg.m_data.size() << " bytes " << std::endl;
 
         m_cpu.reset();
         m_cpu.load_rom(msg.m_data, 0x200);
@@ -24,12 +24,12 @@ cpu_daemon::cpu_daemon() :
 
     this->register_message_handler(cpu_message_type::SetStateRunning, [this](const cpu_message &msg)
     {
-        std::cout << "[cpu_daemon] set cpu running";
+        nchip8::log << "[cpu_daemon] set cpu running" << std::endl;
         this->set_cpu_state(cpu_state::running);
     });
 
 
-    std::cout << "[cpu_daemon] starting cpu thread" << std::endl;
+    nchip8::log << "[cpu_daemon] starting cpu thread" << std::endl;
     m_cpu_thread = std::thread(&cpu_daemon::cpu_thread, this);
 }
 
@@ -82,6 +82,8 @@ void cpu_daemon::cpu_thread()
         if (this->get_cpu_state() == cpu_state::running)
         {
             m_cpu.execute_op_at_pc();
+            nchip8::log << "fuck" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
         }
     }
 }
@@ -99,6 +101,16 @@ void cpu_daemon::register_message_handler(const cpu_message_type &type, const cp
 {
     // add a message handler to the message handlers list of the type
     m_message_handlers.at(type).push_back(hdl);
+}
+
+const cpu::screen_mode &cpu_daemon::get_screen_mode() const
+{
+    return m_cpu.get_screen_mode();
+}
+
+const std::array<bool, 128 * 64> &cpu_daemon::get_screen_framebuffer() const
+{
+    return m_cpu.get_screen_framebuffer();
 }
 
 }

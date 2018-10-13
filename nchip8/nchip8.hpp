@@ -26,7 +26,7 @@ private:
     void process_arguments();
 
     std::unique_ptr<gui> m_gui;
-    std::unique_ptr<cpu_daemon> m_cpu_daemon;
+    std::shared_ptr<cpu_daemon> m_cpu_daemon;
 };
 
 }

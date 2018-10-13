@@ -31,7 +31,7 @@ public:
     //! @param  rom         A vector of 8-bit ints of the raw rom data
     //! @param  address     The memory location to load the rom into
     //! @returns            true if loading was successful, false otherwise
-    bool load_rom(const std::vector<std::uint8_t> &rom, const std::uint16_t address);
+    bool load_rom(const std::vector<std::uint8_t> &rom, const std::uint16_t& address);
 
     //! @brief Executes the current instruction at PC, (PC may jump or increment afterwards)
     void execute_op_at_pc();
@@ -41,7 +41,37 @@ public:
     //! @returns        Optional of string of disassembled instruction
     std::optional<std::string> dasm_op(const std::uint16_t &address) const;
 
+    //! @brief The current resolution mode of the screen
+    enum screen_mode {
+        lores_c8,   //! CHIP-8 64*32
+        hires_sc8   //! SCHIP-8 128*64
+    };
+
+    //! @brief Returns current screen mode
+    //! @see cpu::screen_mode
+    const screen_mode& get_screen_mode() const;
+
+    //! @brief      Returns a reference to screen data
+    //! @returns    Const vector reference that contains the screen data
+    //!             (where true = pixel on, false = pixel off)
+    //! @details    Screen array is ALWAYS the hires size, even if cpu is lores mode
+    const std::array<bool, 128*64>& get_screen_framebuffer() const;
+
+
 private:
+    //! Screen
+    std::array<bool, 128*64> m_screen;
+    screen_mode m_screen_mode;
+
+    //! @brief Set screen mode of CPU
+    void set_screen_mode(const screen_mode& mode);
+
+    //! @brief Get's the status of a pixel on the screen (on/off)
+    inline bool get_screen_xy(const std::uint8_t&x , std::uint8_t& y) const;
+
+    //! @brief Set's the status of a pixel on the screen
+    inline void set_screen_xy(const std::uint8_t& x, const std::uint8_t& y, const bool& set);
+
     //! RAM
     std::array<std::uint8_t, 0x1000> m_ram;
 
@@ -85,6 +115,10 @@ private:
         std::uint8_t m_n;    //! 0xAAAN where A is part of opcode and N is data
     };
 
+    //! @brief Extracts the operand data from an instruction and populates an operand_data struct
+    operand_data get_operand_data_from_instruction(const std::uint16_t& ) const;
+
+
     //! @brief  A function type that when executed,
     //!         should process the instruction operation and update the relevant parts of the CPU
     using func_execute_op = std::function<void(cpu &, const operand_data &)>;
@@ -125,7 +159,7 @@ private:
     //! @brief          Returns the operation handler for an instruction
     //! @param address  The encoded instruction (i.e 0X1200 - JP 200)
     //! @returns        Optional of operation handler if successful, std::nullopt if false
-    std::optional<op_handler> get_op_handler_for_instruction(const std::uint16_t &instruction);
+    std::optional<op_handler> get_op_handler_for_instruction(const std::uint16_t &instruction) const;
 
     //! @brief          Add an operation handler for an instruction into the handler tree
     //! @param handler  Handler structure, containing an execute and disassembly function

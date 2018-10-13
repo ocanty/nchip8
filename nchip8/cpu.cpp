@@ -3,6 +3,7 @@
 //
 
 #include "cpu.hpp"
+#include "io.hpp"
 #include <iostream>
 #include <sstream>
 #include <tuple>
@@ -29,10 +30,9 @@ void cpu::reset()
 
     m_pc = 0x200;
     m_stack.fill(0xBEEF); // fill the stack with junk
-
 }
 
-bool cpu::load_rom(const std::vector<std::uint8_t> &rom, const uint16_t load_addr)
+bool cpu::load_rom(const std::vector<std::uint8_t> &rom, const uint16_t& load_addr)
 {
     // Make sure the rom does not exceed typical loading size
     // Make sure it'l fit into the remainder of memory from it's load point
@@ -45,8 +45,30 @@ bool cpu::load_rom(const std::vector<std::uint8_t> &rom, const uint16_t load_add
     return false;
 }
 
+bool cpu::add_op_handler(const cpu::op_handler &handler)
+{
+    auto& root = m_op_tree;
 
-std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::uint16_t &instruction)
+    // add a node to the tree if we don't have one
+    // see: https://en.cppreference.com/w/cpp/container/unordered_map/try_emplace
+    // try_emplace supports perfect forwarding and inserting the nested map ( {} )
+    // doesn't need args for it's constructor, we don't supply them
+    auto [node_0_iter, node_0_success] = root.try_emplace(handler.m_encoding[0]);
+    auto [node_1_iter, node_1_success] = node_0_iter->second.try_emplace(handler.m_encoding[1]);
+    auto [node_2_iter, node_2_success] = node_1_iter->second.try_emplace(handler.m_encoding[2]);
+
+    auto [iter, success] = node_2_iter->second.try_emplace(handler.m_encoding[3], handler);
+
+    return success;
+}
+
+void cpu::setup_op_handlers()
+{
+    add_op_handler(cpu::JP);
+    add_op_handler(cpu::CALL);
+}
+
+std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::uint16_t& instruction) const
 {
     // alias, not really relevant
     const std::uint16_t &op = instruction;
@@ -84,6 +106,17 @@ std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::ui
     return std::nullopt;
 }
 
+cpu::operand_data cpu::get_operand_data_from_instruction(const std::uint16_t& instruction) const
+{
+    operand_data operands;
+    operands.m_nnn  = (instruction & 0x0FFF);
+    operands.m_x    = (instruction & 0x0F00) >> 8;
+    operands.m_y    = (instruction & 0x00F0) >> 4;
+    operands.m_kk   = (instruction & 0x00FF);
+    operands.m_n    = (instruction & 0x000F);
+    return operands;
+}
+
 void cpu::execute_op_at_pc()
 {
     std::uint16_t instruction = this->read_u16(this->m_pc);
@@ -98,12 +131,7 @@ void cpu::execute_op_at_pc()
     {
         // now extract the vars from the instruction in order to supply to the handlers
 
-        operand_data operands;
-        operands.m_nnn  = (instruction & 0x0FFF);
-        operands.m_x    = (instruction & 0x0F00) >> 8;
-        operands.m_y    = (instruction & 0x00F0) >> 4;
-        operands.m_kk   = (instruction & 0x00FF);
-        operands.m_n    = (instruction & 0x000F);
+        operand_data operands = get_operand_data_from_instruction(instruction);
 
         handler.value().m_execute_op(*this,operands);
 
@@ -113,9 +141,25 @@ void cpu::execute_op_at_pc()
 
 std::optional<std::string> cpu::dasm_op(const std::uint16_t& address) const
 {
-    //const auto& handler = get_op_handler_for_pc();
+    std::uint16_t instruction = this->read_u16(address);
 
-    return "UNKWN";
+    // get an operation handler for the instruction at PC
+    std::optional<op_handler> handler = get_op_handler_for_instruction(instruction);
+
+    if (handler != std::nullopt)
+    {
+        // now extract the vars from the instruction in order to supply to the handlers
+        operand_data operands = get_operand_data_from_instruction(instruction);
+
+        static std::stringstream dasm;
+        dasm.clear();
+
+        handler.value().m_dasm_op(operands, dasm);
+        dasm << std::endl;
+
+        return dasm.str();
+    }
+    return std::nullopt;
 }
 
 std::uint16_t cpu::read_u16(const std::uint16_t &addr) const
@@ -129,27 +173,35 @@ void cpu::set_u16(const std::uint16_t &addr, const std::uint16_t &val)
     m_ram[addr + 1] = val & 0x00FF;
 }
 
-bool cpu::add_op_handler(const cpu::op_handler &handler)
+const cpu::screen_mode &cpu::get_screen_mode() const
 {
-    auto& root = m_op_tree;
-
-    // add a node to the tree if we don't have one
-    // see: https://en.cppreference.com/w/cpp/container/unordered_map/try_emplace
-    // try_emplace supports perfect forwarding and inserting the nested map ( {} )
-    // doesn't need args for it's constructor, we don't supply them
-    auto [node_0_iter, node_0_success] = root.try_emplace(handler.m_encoding[0]);
-    auto [node_1_iter, node_1_success] = node_0_iter->second.try_emplace(handler.m_encoding[1]);
-    auto [node_2_iter, node_2_success] = node_1_iter->second.try_emplace(handler.m_encoding[2]);
-
-    auto [iter, success] = node_2_iter->second.try_emplace(handler.m_encoding[3], handler);
-
-    return success;
+    return m_screen_mode;
 }
 
-void cpu::setup_op_handlers()
+const std::array<bool, 128*64>& cpu::get_screen_framebuffer() const
 {
-    add_op_handler(cpu::JP);
-    add_op_handler(cpu::CALL);
+    return m_screen;
+}
+
+void cpu::set_screen_mode(const cpu::screen_mode &mode)
+{
+    m_screen_mode = mode;
+}
+
+bool cpu::get_screen_xy(const std::uint8_t &x, std::uint8_t &y) const
+{
+     // https://stackoverflow.com/a/2151141 : width * row + col
+    auto width = (get_screen_mode() == screen_mode::hires_sc8) ? 128 : 64;
+
+    return m_screen[width*y+x];
+}
+
+void cpu::set_screen_xy(const std::uint8_t &x, const std::uint8_t &y, const bool &set)
+{
+    // https://stackoverflow.com/a/2151141 : width * row + col
+    auto width = (get_screen_mode() == screen_mode::hires_sc8) ? 128 : 64;
+
+    m_screen[width*y+x] = set;
 }
 
 }

@@ -41,11 +41,50 @@ public:
     //! @brief Message container
     struct cpu_message
     {
+    public:
+        explicit cpu_message(const cpu_message_type& type) :
+        m_type(type),
+        m_data({}),
+        m_callback([](){}),
+        m_on_error([](){})
+        { };
+
+        cpu_message(const cpu_message_type& type,
+                    std::vector<std::uint8_t> data) :
+        m_type(type),
+        m_data(std::move(data)),
+        m_callback([](){}),
+        m_on_error([](){})
+        { };
+
+        cpu_message(const cpu_message_type& type,
+                    std::vector<std::uint8_t> data,
+                    std::function<void(void)> callback) :
+        m_type(type),
+        m_data(std::move(data)),
+        m_callback(std::move(callback)),
+        m_on_error([](){})
+        { };
+
+        cpu_message(const cpu_message_type& type,
+                    std::vector<std::uint8_t> data,
+                    std::function<void(void)> callback,
+                    std::function<void(void)> error) :
+        m_type(type),
+        m_data(std::move(data)),
+        m_callback(std::move(callback)),
+        m_on_error(std::move(error))
+        { };
+
         //! See cpu_message_type
         cpu_message_type m_type;
 
         //! Raw data, usually specified by message type
         std::vector<std::uint8_t> m_data;
+
+        //! Called when the message has finished processing
+        //! (this is called in the cpu_thread!)
+        std::function<void(void)> m_callback;
 
         //! This callback is called when an error occurs, see message type
         std::function<void(void)> m_on_error;
@@ -77,7 +116,16 @@ public:
     //! @brief Set cpu_state
     void set_cpu_state(const cpu_state &);
 
-    std::vector<bool> &get_screen();
+    //! @brief Returns current screen mode
+    //! @see cpu::screen_mode
+    const cpu::screen_mode& get_screen_mode() const;
+
+    //! @brief      Returns a reference to screen data
+    //! @returns    Const vector reference that contains the screen data
+    //!             (where true = pixel on, false = pixel off)
+    //! @details    Screen array is ALWAYS the hires size, even if cpu is
+    const std::array<bool, 128*64>& get_screen_framebuffer() const;
+
 
 private:
     //! CPU instance
