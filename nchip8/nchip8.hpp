@@ -8,6 +8,8 @@
 #include <memory>
 #include <vector>
 
+#include <bits/stdc++.h>
+
 #include "io.hpp"
 #include "cpu_daemon.hpp"
 #include "gui.hpp"

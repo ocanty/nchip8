@@ -60,7 +60,7 @@ void gui::update_windows_on_resize()
     int new_term_h = 0;
     getmaxyx(m_window.get(), new_term_h, new_term_w);
 
-    // resize the window if it's changed within the past update
+    // resize the window if it's changed its size within the past update
     if (new_term_w != m_window_w || new_term_h != m_window_h)
     {
         m_window_w = new_term_w;

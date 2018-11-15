@@ -105,14 +105,22 @@ private:
     //!             0xANNN, 0xAKKA, 0xAXYA, 0xAAAN, 0xAXYN, 0xAAAA
     //!             where A is strictly defined (i.e specifies the instruction)
     //!             NNN, X, Y, KK, and N are considered operand values
+    //!
+    //!             NOTE: the elements of this structure are stored in 16-bit types
+    //!             even when they are 8-bit values because their underlying typedef is a char
+    //!             therefore when printed to stdout, C++ prints them as a char,
+    //!             i.e.
+    //!             so we use 16-bit ints instead.
     struct operand_data
     {
-        std::uint16_t m_nnn; //! 0xANNN where A is part of opcode and NNN is data
-        std::uint8_t m_x;    //! 0xAXAA where A is part of opcode and X is data
-        std::uint8_t m_y;    //! 0xAAYA where A is part of opcode and Y is data
-        std::uint8_t m_kk;   //! 0xAAKK where A is part of opcode and KK is data
-        std::uint8_t m_n;    //! 0xAAAN where A is part of opcode and N is data
+        std::uint16_t m_nnn;  //! 0xANNN where A is part of opcode and NNN is data
+        std::uint16_t m_x;    //! 0xAXAA where A is part of opcode and X is data
+        std::uint16_t m_y;    //! 0xAAYA where A is part of opcode and Y is data
+        std::uint16_t m_kk;   //! 0xAAKK where A is part of opcode and KK is data
+        std::uint16_t m_n;    //! 0xAAAN where A is part of opcode and N is data
     };
+
+
 
     //! @brief Extracts the operand data from an instruction and populates an operand_data struct
     operand_data get_operand_data_from_instruction(const std::uint16_t& ) const;

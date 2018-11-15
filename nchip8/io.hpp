@@ -23,6 +23,7 @@ std::ostream& n(std::ostream& out);
 std::ostream& kk(std::ostream& out);
 std::ostream& x(std::ostream& out);
 std::ostream& y(std::ostream& out);
+std::ostream& clr(std::ostream& out);
 
 }
 

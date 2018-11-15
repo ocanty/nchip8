@@ -82,7 +82,6 @@ void cpu_daemon::cpu_thread()
         if (this->get_cpu_state() == cpu_state::running)
         {
             m_cpu.execute_op_at_pc();
-            nchip8::log << "fuck" << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(250));
         }
     }

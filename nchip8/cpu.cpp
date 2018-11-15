@@ -65,8 +65,27 @@ bool cpu::add_op_handler(const cpu::op_handler &handler)
 
 void cpu::setup_op_handlers()
 {
+    add_op_handler(cpu::RET);
     add_op_handler(cpu::JP);
     add_op_handler(cpu::CALL);
+    add_op_handler(cpu::SE_VX_KK);
+    add_op_handler(cpu::SNE_VX_KK);
+    add_op_handler(cpu::SE_VX_VY);
+    add_op_handler(cpu::LD_VX_KK);
+    add_op_handler(cpu::ADD_VX_KK);
+    add_op_handler(cpu::LD_VX_VY);
+    add_op_handler(cpu::OR_VX_VY);
+    add_op_handler(cpu::AND_VX_VY);
+    add_op_handler(cpu::XOR_VX_VY);
+    add_op_handler(cpu::ADD_VX_VY);
+    add_op_handler(cpu::SUB_VX_VY);
+    add_op_handler(cpu::SHR_VX_VY);
+    add_op_handler(cpu::SUBN_VX_VY);
+    add_op_handler(cpu::SHL_VX_VY);
+    add_op_handler(cpu::SNE_VX_VY);
+    add_op_handler(cpu::LD_I_NNN);
+    add_op_handler(cpu::JP_V0_NNN);
+    add_op_handler(cpu::RND_VX_KK);
 }
 
 std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::uint16_t& instruction) const
@@ -80,6 +99,8 @@ std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::ui
     std::uint8_t n2 = (op & 0x00F0) >> 4;
     std::uint8_t n1 = (op & 0x0F00) >> 8;
     std::uint8_t n0 = (op & 0xF000) >> 12;
+
+
 
     const auto &root = m_op_tree;
 
@@ -139,6 +160,24 @@ void cpu::execute_op_at_pc()
         operand_data operands = get_operand_data_from_instruction(instruction);
 
         handler.value().m_execute_op(*this,operands);
+
+        handler.value().m_dasm_op(operands,nchip8::log);
+
+        // print out each register
+        for(std::uint16_t r = 0; r < 16; r++)
+        {
+            nchip8::log << " V" << std::hex << r << " " << (std::uint16_t)this->m_gpr[r];
+        }
+
+        nchip8::log << std::endl;
+
+        this->set_screen_xy(2,2,true);
+
+        if(saved_pc == this->m_pc) // if pc wasnt modified by the executing function
+        {
+            // go to the next instruction
+            this->m_pc+=2;
+        }
 
         return;
     }

@@ -26,12 +26,18 @@ std::ostream& kk(std::ostream& out)
 
 std::ostream& x(std::ostream& out)
 {
-    return out << std::setfill('0') << std::setw(1) << std::hex;
+    return out << std::setfill('0') << std::setw(2) << std::hex;
 }
 
 std::ostream& y(std::ostream& out)
 {
-    return out << std::setfill('0') << std::setw(1) << std::hex;
+    return out << std::setfill('0') << std::setw(2) << std::hex;
+}
+
+std::ostream& clr(std::ostream& out)
+{
+    std::cout.fill();
+    return out << std::dec << std::setw(1);
 }
 
 

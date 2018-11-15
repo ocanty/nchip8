@@ -129,7 +129,8 @@ cpu::op_handler cpu::LD_VX_KK
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "LD V" << nchip8::x << operands.m_x << ", " << nchip8::kk << operands.m_kk;
+        ss << "LD V"  << nchip8::x << operands.m_x << ", " << nchip8::kk << operands.m_kk;
+
     }
 };
 
@@ -327,7 +328,7 @@ cpu::op_handler cpu::SNE_VX_VY
     { 0x9, DATA, DATA, 0x0 },
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        if(cpu.m_gpr[operands.m_x] != cpu.m_gpr[operands.m_y]) cpu.m_pc += 0x2;
+        if(cpu.m_gpr[operands.m_x] != cpu.m_gpr[operands.m_y]) cpu.m_pc += 0x4; // skip current and go to 1 after
     },
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
