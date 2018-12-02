@@ -18,16 +18,16 @@ namespace nchip8
 class gui
 {
 public:
-    gui();
+    //! @brief Constructor
+    //!
+    //! @param cpu  CPU
+    //!             that the GUI will display the screen, disassembly & status of
+    gui(const std::shared_ptr<cpu_daemon>& cpu);
 
     ~gui();
 
     //! @brief Start the GUI logic thread, this will block input and the main thread!
     void loop();
-
-    //! @brief Set the cpu (via it's daemon)
-    //!         that the GUI will display the screen, disassembly & status of
-    void set_cpu_target(const std::shared_ptr<cpu_daemon>&);
 
 private:
     std::shared_ptr<cpu_daemon> m_cpu_daemon;
@@ -42,6 +42,7 @@ private:
     std::shared_ptr<::WINDOW> m_window          = nullptr;
     std::shared_ptr<::WINDOW> m_screen_window   = nullptr;
     std::shared_ptr<::WINDOW> m_log_window      = nullptr;
+    std::shared_ptr<::WINDOW> m_reg_window      = nullptr;
 
     //! @brief  Rebuilds window when a size change is detected
     void update_windows_on_resize();
@@ -58,6 +59,9 @@ private:
 
     //! @brief Updates the screen if the gui is attached to a cpu_daemon
     void update_screen_window();
+
+    //! @brief  Update the register preview window, showing all the values of the CPU registers
+    void update_reg_window();
 
     //! @brief Redraw's all the windows to the current terminal height and width
     void rebuild_windows();

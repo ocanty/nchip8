@@ -15,11 +15,11 @@ namespace nchip8
 nchip8_app::nchip8_app(const std::vector<std::string> &args)
 {
     // dump the arguments
-    nchip8::log << "[nchip8] start" << std::endl;
+    nchip8::log << "[nchip8] start" << '\n';
 
     for (auto &arg : args)
     {
-        nchip8::log << "[nchip8] arg: " << arg << std::endl;
+        nchip8::log << "[nchip8] arg: " << arg << '\n';
     }
 
     // complain if they don't supply a file
@@ -42,7 +42,7 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args)
     {
         char byte = 0x00;
         input_file.read(&byte, sizeof(char));
-        input_data.push_back((std::uint8_t) byte);
+        input_data.push_back((std::uint8_t)byte);
 
         byte_count++;
         byte_count %= 16; // wrap in range of 0-16
@@ -55,11 +55,11 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args)
         // if the byte count has been reset, add a newline
         if (byte_count == 0)
         {
-            nchip8::log << std::endl;
+            nchip8::log << '\n';
         }
     }
 
-    nchip8::log << std::endl;
+    nchip8::log << '\n';
 
     m_cpu_daemon = std::make_shared<cpu_daemon>();
 
@@ -68,7 +68,7 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args)
         input_data,
         []()
         {
-            nchip8::log << "Could not load ROM!" << std::endl;
+            nchip8::log << "Could not load ROM!" << '\n';
             exit(-1); // ew
         }}
     );
@@ -84,8 +84,7 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args)
         }
     );
 
-    m_gui = std::make_unique<gui>();
-    m_gui->set_cpu_target(m_cpu_daemon);
+    m_gui = std::make_unique<gui>(m_cpu_daemon);
     m_gui->loop(); // this is blocking
 
 }
