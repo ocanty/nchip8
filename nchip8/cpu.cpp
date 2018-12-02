@@ -164,7 +164,11 @@ void cpu::execute_op_at_pc()
         // now extract the vars from the instruction in order to supply to the handlers
 
         operand_data operands = get_operand_data_from_instruction(instruction);
-
+        
+        nchip8::log << std::hex << this->m_pc << ' ';
+        nchip8::log << " " << std::hex << instruction << " ";
+        handler.value().m_dasm_op(operands,nchip8::log);
+        nchip8::log << '\n';
         handler.value().m_execute_op(*this,operands);
 
         if(saved_pc == this->m_pc) // if pc wasnt modified by the executing function
@@ -172,11 +176,6 @@ void cpu::execute_op_at_pc()
             // go to the next instruction
             this->m_pc+=2;
         }
-
-        nchip8::log << std::hex << this->m_pc << ' ';
-        nchip8::log << " " << std::hex << instruction << " ";
-        handler.value().m_dasm_op(operands,nchip8::log);
-        nchip8::log << '\n';
 
         return;
     }
