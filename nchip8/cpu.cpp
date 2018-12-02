@@ -8,6 +8,7 @@
 #include <sstream>
 #include <tuple>
 #include <utility>
+#include <thread>
 
 namespace nchip8
 {
@@ -86,6 +87,7 @@ void cpu::setup_op_handlers()
     add_op_handler(cpu::LD_I_NNN);
     add_op_handler(cpu::JP_V0_NNN);
     add_op_handler(cpu::RND_VX_KK);
+    add_op_handler(cpu::DRW_VX_VY_N);
 }
 
 std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::uint16_t& instruction) const
@@ -144,6 +146,10 @@ cpu::operand_data cpu::get_operand_data_from_instruction(const std::uint16_t& in
 
 void cpu::execute_op_at_pc()
 {
+    static bool kill_next_execute = false;
+
+    if(kill_next_execute) return;
+
     // read the encoded instruction
     std::uint16_t instruction = this->read_u16(this->m_pc);
 
@@ -161,48 +167,45 @@ void cpu::execute_op_at_pc()
 
         handler.value().m_execute_op(*this,operands);
 
-        handler.value().m_dasm_op(operands,nchip8::log);
-
-        // print out each register
-        for(std::uint16_t r = 0; r < 16; r++)
-        {
-            nchip8::log << " V" << std::hex << r << " " << (std::uint16_t)this->m_gpr[r];
-        }
-
-        nchip8::log << std::endl;
-
-        this->set_screen_xy(2,2,true);
-
         if(saved_pc == this->m_pc) // if pc wasnt modified by the executing function
         {
             // go to the next instruction
             this->m_pc+=2;
         }
 
+        nchip8::log << std::hex << this->m_pc << ' ';
+        nchip8::log << " " << std::hex << instruction << " ";
+        handler.value().m_dasm_op(operands,nchip8::log);
+        nchip8::log << '\n';
+
         return;
+    }
+    else {
+        nchip8::log << "unhandled instruction: " << std::hex << instruction << '\n';
+        kill_next_execute = true;
     }
 }
 
 std::optional<std::string> cpu::dasm_op(const std::uint16_t& address) const
 {
-    std::uint16_t instruction = this->read_u16(address);
-
-    // get an operation handler for the instruction at PC
-    std::optional<op_handler> handler = get_op_handler_for_instruction(instruction);
-
-    if (handler != std::nullopt)
-    {
-        // now extract the vars from the instruction in order to supply to the handlers
-        operand_data operands = get_operand_data_from_instruction(instruction);
-
-        static std::stringstream dasm;
-        dasm.clear();
-
-        handler.value().m_dasm_op(operands, dasm);
-        dasm << std::endl;
-
-        return dasm.str();
-    }
+//    std::uint16_t instruction = this->read_u16(address);
+//
+//    // get an operation handler for the instruction at PC
+//    std::optional<op_handler> handler = get_op_handler_for_instruction(instruction);
+//
+//    if (handler != std::nullopt)
+//    {
+//        // now extract the vars from the instruction in order to supply to the handlers
+//        operand_data operands = get_operand_data_from_instruction(instruction);
+//
+//        static std::stringstream dasm;
+//        dasm.clear();
+//
+//        handler.value().m_dasm_op(operands, dasm);
+//        dasm << '\'
+//
+//        return dasm.str();
+//    }
     return std::nullopt;
 }
 

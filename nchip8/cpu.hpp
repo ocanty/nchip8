@@ -60,7 +60,11 @@ public:
     //! @brief Get's the status of a pixel on the screen (on/off)
     bool get_screen_xy(const std::uint8_t&x , const std::uint8_t& y) const;
 
+    friend class cpu_daemon; //! We allow the daemon watcher to access data in the CPU
+
 private:
+
+
     //! Screen
     std::array<bool, 128*64> m_screen;
     screen_mode m_screen_mode;
@@ -69,7 +73,7 @@ private:
     void set_screen_mode(const screen_mode& mode);
 
     //! @brief Set's the status of a pixel on the screen
-    inline void set_screen_xy(const std::uint8_t& x, const std::uint8_t& y, const bool& set);
+    void set_screen_xy(const std::uint8_t& x, const std::uint8_t& y, const bool& set);
 
     //! RAM
     std::array<std::uint8_t, 0x1000> m_ram;
