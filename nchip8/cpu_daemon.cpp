@@ -16,7 +16,7 @@ cpu_daemon::cpu_daemon() :
 
     this->register_message_handler(cpu_message_type::LoadROM, [this](const cpu_message &msg)
     {
-        nchip8::log << "[cpu_daemon] received rom: " << msg.m_data.size() << " bytes " << std::endl;
+        nchip8::log << "[cpu_daemon] received rom: " << msg.m_data.size() << " bytes " << '\n';
 
         m_cpu.reset();
         m_cpu.load_rom(msg.m_data, 0x200);
@@ -24,12 +24,12 @@ cpu_daemon::cpu_daemon() :
 
     this->register_message_handler(cpu_message_type::SetStateRunning, [this](const cpu_message &msg)
     {
-        nchip8::log << "[cpu_daemon] set cpu running" << std::endl;
+        nchip8::log << "[cpu_daemon] set cpu running" << '\n';
         this->set_cpu_state(cpu_state::running);
     });
 
 
-    nchip8::log << "[cpu_daemon] starting cpu thread" << std::endl;
+    nchip8::log << "[cpu_daemon] starting cpu thread" << '\n';
     m_cpu_thread = std::thread(&cpu_daemon::cpu_thread, this);
 }
 
@@ -68,7 +68,8 @@ void cpu_daemon::cpu_thread()
             if (m_message_handlers.at(msg.m_type).size() > 0)
             {
                 // call all the message handlers
-                for (auto &handler : m_message_handlers.at(msg.m_type))
+                // using cpu_message_handler = std::function<void(const cpu_message &)>;
+                for (cpu_message_handler& handler : m_message_handlers.at(msg.m_type))
                 {
                     handler(msg);
 
@@ -79,11 +80,9 @@ void cpu_daemon::cpu_thread()
             m_unhandled_messages.pop();
         }
 
-        if (this->get_cpu_state() == cpu_state::running)
-        {
-            m_cpu.execute_op_at_pc();
-            std::this_thread::sleep_for(std::chrono::milliseconds(250));
-        }
+
+        m_cpu.execute_op_at_pc();
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     }
 }
 
@@ -115,6 +114,31 @@ const std::array<bool, 128 * 64> &cpu_daemon::get_screen_framebuffer() const
 bool cpu_daemon::get_screen_xy(const std::uint8_t &x, const std::uint8_t &y) const
 {
     return m_cpu.get_screen_xy(x,y);
+}
+
+const std::array<std::uint8_t, 16>& cpu_daemon::get_gpr() const
+{
+    return m_cpu.m_gpr;
+}
+
+const std::uint16_t cpu_daemon::get_i() const
+{
+    return m_cpu.m_i;
+}
+
+const std::uint16_t cpu_daemon::get_sp() const
+{
+    return m_cpu.m_sp;
+}
+
+const std::uint16_t cpu_daemon::get_pc() const
+{
+    return m_cpu.m_pc;
+}
+
+const std::array<std::uint16_t, 16> cpu_daemon::get_stack() const
+{
+    return m_cpu.m_stack;
 }
 
 }

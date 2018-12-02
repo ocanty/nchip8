@@ -129,6 +129,21 @@ public:
     //! @brief Get's the status of a pixel on the screen (on/off)
     bool get_screen_xy(const std::uint8_t&x , const std::uint8_t& y) const;
 
+    //! @brief Returns a reference to the general purpose cpu registers (i.e V0-V15)
+    const std::array<std::uint8_t, 16>& get_gpr() const;
+
+    //! @brief Get I register
+    const std::uint16_t get_i() const;
+
+    //! @brief Get Stack Pointer
+    const std::uint16_t get_sp() const;
+
+    //! @brief Get Program Counter
+    const std::uint16_t get_pc() const;
+
+    //! @brief Get stack
+    const std::array<std::uint16_t, 16> get_stack() const;
+
 private:
     //! CPU instance
     cpu m_cpu;
