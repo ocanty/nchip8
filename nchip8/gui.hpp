@@ -9,6 +9,7 @@
 #include <sstream>
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 #include "cpu_daemon.hpp"
 
@@ -65,6 +66,10 @@ private:
 
     //! @brief Redraw's all the windows to the current terminal height and width
     void rebuild_windows();
+
+    //! @brief  Currently pressed keys, where key index if pressed = number of gui
+    //!         ticks the key will remain pressed
+    std::unordered_map<int,int> m_keys;
 
 };
 

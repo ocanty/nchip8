@@ -39,12 +39,16 @@ void gui::rebuild_windows()
     ::setlocale(LC_ALL, ""); // set locale, needs to be done before ncurses init
 
     m_window = std::shared_ptr<::WINDOW>(::initscr(), ::wdelch);
-    ::cbreak();
-    ::noecho();
+
     ::nonl();
-    ::intrflush(stdscr, FALSE);
-    ::keypad(stdscr, TRUE);
+    ::intrflush(m_window.get(), FALSE);
+    ::keypad(m_window.get(), TRUE);
     ::curs_set(0); // disable cursor
+
+    // non blocking input
+    ::cbreak();
+    ::nodelay(m_window.get(), TRUE);
+    ::noecho(); // dont draw chars when entered
 
     // 66 x 18 (64x16 excluding border)
     m_screen_window = std::shared_ptr<::WINDOW>(::newwin(18, 66, 0, 0), ::wdelch);
@@ -80,6 +84,7 @@ void gui::update_windows_on_resize()
 void gui::loop()
 {
     bool die = false;
+
     while (!die)
     {
         //update_windows_on_resize();
@@ -87,8 +92,22 @@ void gui::loop()
         update_screen_window();
         update_reg_window();
 
-        // dont eat cpu
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        // we achieve multiple key inputs by giving each key a score
+        // every frame we decrement the score
+        // if the score is decremented, the key is no longer considered pressed
+        int e = getch();
+        m_keys[e] = 100;
+
+        for(auto& pressed_key : m_keys) {
+            pressed_key.second--;
+
+            if(pressed_key.second == 0) {
+                m_keys.erase(pressed_key.first);
+            }
+        }
+
+        // gui aims to be at 60fps
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000/60));
     }
 }
 
@@ -158,27 +177,27 @@ void gui::update_screen_window()
     unsigned int width = (mode == cpu::screen_mode::hires_sc8 ? 128 : 64);
     unsigned int height = (mode == cpu::screen_mode::lores_c8 ? 64 : 32);
 
-    unsigned int draw_y = 1; // start at 1 to avoid border of the window
+    unsigned int draw_y = 1;
+
     std::wstring line;
 
-    for (unsigned int y = 0; y < height; y += 2)
+    for (unsigned int y = 0; y < (height-1); y+=2)
     {
-        line.clear();
-
         for (unsigned int x = 0; x < width; x++)
         {
             bool set_top = m_cpu_daemon->get_screen_xy(x, y);
 
-            unsigned int nextrow_y = y + 1;
-            bool set_bottom = m_cpu_daemon->get_screen_xy(x, nextrow_y);
+            // check the row of pixels below and see if we can get a group of two vertical pixels
+            bool set_bottom = m_cpu_daemon->get_screen_xy(x, y + 1);
 
             if (set_top && set_bottom) { line += L"█"; /* █ */ continue; }
             if (set_top)               { line += L"▀"; /* ▀ */ continue; }
             if (set_bottom)            { line += L"▄"; /* ▄ */ continue; }
-            line += '.';
+            line += ' ';
         }
-        mvwaddwstr(m_screen_window.get(), draw_y, 1, line.c_str());
 
+        mvwaddwstr(m_screen_window.get(), draw_y, 1, line.c_str());
+        line.clear();
         draw_y++;
     }
 
