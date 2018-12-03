@@ -9,6 +9,7 @@
 #include <tuple>
 #include <utility>
 #include <thread>
+#include <chrono>
 
 namespace nchip8
 {
@@ -32,6 +33,9 @@ void cpu::reset()
 
     m_pc = 0x200;
     m_stack.fill(0xBEEF); // fill the stack with junk
+
+    m_dt = 0;
+    m_st = 0;
 }
 
 bool cpu::load_rom(const std::vector<std::uint8_t> &rom, const uint16_t& load_addr)
@@ -146,8 +150,10 @@ cpu::operand_data cpu::get_operand_data_from_instruction(const std::uint16_t& in
 
 void cpu::execute_op_at_pc()
 {
+    static auto last_clock = std::chrono::high_resolution_clock::now();
     static bool kill_next_execute = false;
 
+    // used to end execution if an error occurs
     if(kill_next_execute) return;
 
     // read the encoded instruction
@@ -156,22 +162,50 @@ void cpu::execute_op_at_pc()
     // get an operation handler for the instruction at PC
     std::optional<op_handler> handler = get_op_handler_for_instruction(instruction);
 
-    // save the program counter, we will compare it after execution to see if a jump was performed
-    std::uint16_t saved_pc = this->m_pc;
-
+    // if its a valid operation
     if (handler != std::nullopt)
     {
-        // now extract the vars from the instruction in order to supply to the handlers
+        // update the delay timer and sleep timer while we're at it
+        // let's check how much time has passed since the last cpu execution
+        auto delta_duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::high_resolution_clock::now() - last_clock
+        ).count();
 
+        // ST and DT are meant to be decremented at 60hz
+        // we work out how many ticks have passed
+        auto ticks = delta_duration_ms / (1000/60);
+
+        // subtract ticks or force timers to zero if enough ticks to totally empty them had elapsed
+        if(ticks > m_dt) { m_dt = 0; } else { m_dt -= ticks; }
+        if(ticks > m_st) { m_st = 0; } else { m_st -= ticks; }
+
+        // update the clock so the next delta works correctly
+        last_clock = std::chrono::high_resolution_clock::now();
+
+
+        // if the sound timer is non-zero sound a buzz
+        if(m_st > 0) {
+            // TODO: sound buzz on non-zero sound timer
+        }
+
+        // save the program counter,
+        // we will compare it after execution to see if a jump was performed
+        std::uint16_t saved_pc = this->m_pc;
+
+        // now extract the vars from the instruction in order to supply to the handlers
         operand_data operands = get_operand_data_from_instruction(instruction);
-        
+
+        // disassemble and print to log
         nchip8::log << std::hex << this->m_pc << ' ';
         nchip8::log << " " << std::hex << instruction << " ";
         handler.value().m_dasm_op(operands,nchip8::log);
         nchip8::log << '\n';
+
+        // execute the operation
         handler.value().m_execute_op(*this,operands);
 
-        if(saved_pc == this->m_pc) // if pc wasnt modified by the executing function
+        // if pc wasnt modified by the operation
+        if(saved_pc == this->m_pc)
         {
             // go to the next instruction
             this->m_pc+=2;

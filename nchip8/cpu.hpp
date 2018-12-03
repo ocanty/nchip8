@@ -64,7 +64,6 @@ public:
 
 private:
 
-
     //! Screen
     std::array<bool, 128*64> m_screen;
     screen_mode m_screen_mode;
@@ -90,6 +89,12 @@ private:
 
     //! Stack Pointer, the size of the stack
     std::uint8_t m_sp;
+
+    //! Delay Timer, when this is non-zero, we must subtract 1 from it @ 60Hz
+    std::uint8_t m_dt;
+
+    //! Sound Timer, when this is non-zero, we must subtract 1 from it @ 60Hz while playing a buzzer
+    std::uint8_t m_st;
 
     //! The Stack
     std::array<std::uint16_t, 16> m_stack;
@@ -183,7 +188,7 @@ private:
                   as the instruction name will match the test name */
     static op_handler CLS;          // 00E0 - CLS
     static op_handler RET;          // 00EE - RET
-    static op_handler SYS;          // 0nnn - SYS addr
+    static op_handler SYS;        z   // 0nnn - SYS addr
     static op_handler JP;           // 1nnn - JP addr
     static op_handler CALL;         // 2nnn - CALL addr
     static op_handler SE_VX_KK;     // 3xkk - SE Vx, byte
