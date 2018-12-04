@@ -67,11 +67,11 @@ private:
     //! @brief Redraw's all the windows to the current terminal height and width
     void rebuild_windows();
 
-    //! @brief  Currently pressed keys, where key index if pressed = number of gui
-    //!         ticks the key will remain pressed
-    std::unordered_map<int,int> m_keys;
+    //! @brief  Map what ncurses chracters to what keypad key
+    static const std::unordered_map<int, std::uint8_t> key_mapping;
 
 };
+
 
 }
 

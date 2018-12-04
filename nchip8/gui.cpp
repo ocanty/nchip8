@@ -7,11 +7,14 @@
 
 #include <curses.h>
 #include <clocale>
+#include <cstdio>
+
 #include <iostream>
 #include <vector>
 #include <thread>
 #include <chrono>
 #include <algorithm>
+#include <unordered_map>
 
 namespace nchip8
 {
@@ -81,6 +84,23 @@ void gui::update_windows_on_resize()
     }
 }
 
+/**
+ *
+ * Typical CHIP-8 keypad was to look like this:
+    1	2	3	C
+    4	5	6	D
+    7	8	9	E
+    A	0	B	F
+
+    Let's do our best to map it to a modern keyboard
+ */
+const std::unordered_map<int, std::uint8_t> gui::key_mapping = {
+    {'1',0x1}, {'2',0x2}, {'3',0x3}, {'4', 0xC},
+    {'q',0x4}, {'w',0x5}, {'e',0x6}, {'r', 0xD},
+    {'a',0x7}, {'s',0x8}, {'d',0x9}, {'f', 0xE},
+    {'z',0xA}, {'x',0x0}, {'c',0xB}, {'v', 0xF},
+};
+
 void gui::loop()
 {
     bool die = false;
@@ -95,15 +115,21 @@ void gui::loop()
         // we achieve multiple key inputs by giving each key a score
         // every frame we decrement the score
         // if the score is decremented, the key is no longer considered pressed
-        int e = getch();
-        m_keys[e] = 100;
+        int c = getch();
 
-        for(auto& pressed_key : m_keys) {
-            pressed_key.second--;
+        // mappings are stored lowercase,
+        // tolower will pass thru non-characters as-well (e.g. 0->0)
+        int char_lowered = std::tolower(c);
 
-            if(pressed_key.second == 0) {
-                m_keys.erase(pressed_key.first);
-            }
+        // if we didnt get a bad char and there is a valid mapping
+        // pass it to the cpu
+        if(c != ERR && key_mapping.count(char_lowered))
+        {
+            m_cpu_daemon->set_key_down(key_mapping.at(char_lowered));
+        }
+        else
+        {
+            m_cpu_daemon->set_key_down_none();
         }
 
         // gui aims to be at 60fps
