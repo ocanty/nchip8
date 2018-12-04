@@ -10,6 +10,7 @@
 #include <utility>
 #include <thread>
 #include <chrono>
+#include <algorithm>
 
 namespace nchip8
 {
@@ -25,6 +26,25 @@ cpu::~cpu()
 
 }
 
+const std::vector<std::array<std::uint8_t,5>> font = {
+    {0xF0, 0x90, 0x90, 0x90, 0xF0}, // 0
+    {0x20, 0x60, 0x20, 0x20, 0x70}, // 1
+    {0xF0, 0x10, 0xF0, 0x80, 0xF0}, // 2
+    {0xF0, 0x10, 0xF0, 0x10, 0xF0}, // 3
+    {0x90, 0x90, 0xF0, 0x10, 0x10}, // 4
+    {0xF0, 0x80, 0xF0, 0x10, 0xF0}, // 5
+    {0xF0, 0x80, 0xF0, 0x90, 0xF0}, // 6
+    {0xF0, 0x10, 0x20, 0x40, 0x40}, // 7
+    {0xF0, 0x90, 0xF0, 0x90, 0xF0}, // 8
+    {0xF0, 0x90, 0xF0, 0x10, 0xF0}, // 9
+    {0xF0, 0x90, 0xF0, 0x90, 0x90}, // A
+    {0xE0, 0x90, 0xE0, 0x90, 0xE0}, // B
+    {0xF0, 0x80, 0x80, 0x80, 0xF0}, // C
+    {0xE0, 0x90, 0x90, 0x90, 0xE0}, // D
+    {0xF0, 0x80, 0xF0, 0x80, 0xF0}, // E
+    {0xF0, 0x80, 0xF0, 0x80, 0x80}  // F
+};
+
 void cpu::reset()
 {
     // clear registers and memory
@@ -36,6 +56,15 @@ void cpu::reset()
 
     m_dt = 0;
     m_st = 0;
+
+    // copy each byte of the font sprite into memory
+    int i = 0;
+    for(auto& character : font) {
+        for(auto& byte : character) {
+            m_ram[i] = byte;
+            i++;
+        }
+    }
 }
 
 bool cpu::load_rom(const std::vector<std::uint8_t> &rom, const uint16_t& load_addr)
@@ -70,28 +99,41 @@ bool cpu::add_op_handler(const cpu::op_handler &handler)
 
 void cpu::setup_op_handlers()
 {
-    add_op_handler(cpu::RET);
-    add_op_handler(cpu::JP);
-    add_op_handler(cpu::CALL);
-    add_op_handler(cpu::SE_VX_KK);
-    add_op_handler(cpu::SNE_VX_KK);
-    add_op_handler(cpu::SE_VX_VY);
-    add_op_handler(cpu::LD_VX_KK);
-    add_op_handler(cpu::ADD_VX_KK);
-    add_op_handler(cpu::LD_VX_VY);
-    add_op_handler(cpu::OR_VX_VY);
-    add_op_handler(cpu::AND_VX_VY);
-    add_op_handler(cpu::XOR_VX_VY);
-    add_op_handler(cpu::ADD_VX_VY);
-    add_op_handler(cpu::SUB_VX_VY);
-    add_op_handler(cpu::SHR_VX_VY);
-    add_op_handler(cpu::SUBN_VX_VY);
-    add_op_handler(cpu::SHL_VX_VY);
-    add_op_handler(cpu::SNE_VX_VY);
-    add_op_handler(cpu::LD_I_NNN);
-    add_op_handler(cpu::JP_V0_NNN);
-    add_op_handler(cpu::RND_VX_KK);
-    add_op_handler(cpu::DRW_VX_VY_N);
+    add_op_handler(CLS);
+    add_op_handler(RET);
+    // add_op_handler(SYS);
+    add_op_handler(JP);
+    add_op_handler(CALL);
+    add_op_handler(SE_VX_KK);
+    add_op_handler(SNE_VX_KK);
+    add_op_handler(SE_VX_VY);
+    add_op_handler(LD_VX_KK);
+    add_op_handler(ADD_VX_KK);
+    add_op_handler(LD_VX_VY);
+    add_op_handler(OR_VX_VY);
+    add_op_handler(AND_VX_VY);
+    add_op_handler(XOR_VX_VY);
+    add_op_handler(ADD_VX_VY);
+    add_op_handler(SUB_VX_VY);
+    add_op_handler(SHR_VX_VY);
+    add_op_handler(SUBN_VX_VY);
+    add_op_handler(SHL_VX_VY);
+    add_op_handler(SNE_VX_VY);
+    add_op_handler(LD_I_NNN);
+    add_op_handler(JP_V0_NNN);
+    add_op_handler(RND_VX_KK);
+    add_op_handler(DRW_VX_VY_N);
+    add_op_handler(SKP_VX);
+    add_op_handler(SKNP_VX);
+    add_op_handler(LD_VX_DT);
+    add_op_handler(LD_VX_K);
+    add_op_handler(LD_DT_VX);
+    add_op_handler(LD_ST_VX);
+    add_op_handler(ADD_I_VX);
+    add_op_handler(LD_F_VX);
+    add_op_handler(LD_B_VX);
+    add_op_handler(LD_imm_I_VX);
+    add_op_handler(LD_VX_imm_I);
 }
 
 std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::uint16_t& instruction) const
@@ -199,7 +241,7 @@ void cpu::execute_op_at_pc()
         nchip8::log << std::hex << this->m_pc << ' ';
         nchip8::log << " " << std::hex << instruction << " ";
         handler.value().m_dasm_op(operands,nchip8::log);
-        nchip8::log << '\n';
+        nchip8::log << std::endl;
 
         // execute the operation
         handler.value().m_execute_op(*this,operands);
@@ -209,12 +251,14 @@ void cpu::execute_op_at_pc()
         {
             // go to the next instruction
             this->m_pc+=2;
+
+            nchip8::log << this->read_u16(this->m_pc);
         }
 
         return;
     }
     else {
-        nchip8::log << "unhandled instruction: " << std::hex << instruction << '\n';
+        nchip8::log << "unhandled instruction: " << std::hex << instruction << std::endl;
         kill_next_execute = true;
     }
 }
@@ -282,6 +326,16 @@ void cpu::set_screen_xy(const std::uint8_t &x, const std::uint8_t &y, const bool
     auto width = (get_screen_mode() == screen_mode::hires_sc8) ? 128 : 64;
 
     m_screen[width*y+x] = set;
+}
+
+void cpu::set_key_down(const std::uint8_t &key)
+{
+    m_key_down = key;
+}
+
+void cpu::set_key_down_none()
+{
+    m_key_down = std::nullopt;
 }
 
 }

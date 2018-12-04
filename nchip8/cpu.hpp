@@ -60,9 +60,18 @@ public:
     //! @brief Get's the status of a pixel on the screen (on/off)
     bool get_screen_xy(const std::uint8_t&x , const std::uint8_t& y) const;
 
+    //! @brief Set the supplied key as down
+    void set_key_down(const std::uint8_t& key);
+
+    //! @brief Set no key down
+    void set_key_down_none();
+
     friend class cpu_daemon; //! We allow the daemon watcher to access data in the CPU
 
 private:
+    //! CHIP-8 keypad is mapped to nibble i.e 0x0-0xF of keys
+    //! tue
+    std::optional<std::uint8_t> m_key_down;
 
     //! Screen
     std::array<bool, 128*64> m_screen;
@@ -188,7 +197,7 @@ private:
                   as the instruction name will match the test name */
     static op_handler CLS;          // 00E0 - CLS
     static op_handler RET;          // 00EE - RET
-    static op_handler SYS;        z   // 0nnn - SYS addr
+    static op_handler SYS;          // 0nnn - SYS addr
     static op_handler JP;           // 1nnn - JP addr
     static op_handler CALL;         // 2nnn - CALL addr
     static op_handler SE_VX_KK;     // 3xkk - SE Vx, byte
