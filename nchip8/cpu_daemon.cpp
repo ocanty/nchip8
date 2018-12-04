@@ -82,7 +82,7 @@ void cpu_daemon::cpu_thread()
 
 
         m_cpu.execute_op_at_pc();
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
@@ -139,6 +139,26 @@ const std::uint16_t cpu_daemon::get_pc() const
 const std::array<std::uint16_t, 16> cpu_daemon::get_stack() const
 {
     return m_cpu.m_stack;
+}
+
+const std::uint8_t cpu_daemon::get_dt() const
+{
+    return m_cpu.m_dt;
+}
+
+const std::uint8_t cpu_daemon::get_st() const
+{
+    return m_cpu.m_st;
+}
+
+void cpu_daemon::set_key_down(const std::uint8_t &key)
+{
+    m_cpu.set_key_down(key);
+}
+
+void cpu_daemon::set_key_down_none()
+{
+    m_cpu.set_key_down_none();
 }
 
 }

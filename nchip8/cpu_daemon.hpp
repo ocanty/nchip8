@@ -129,6 +129,9 @@ public:
     //! @brief Get's the status of a pixel on the screen (on/off)
     bool get_screen_xy(const std::uint8_t&x , const std::uint8_t& y) const;
 
+    void set_key_down(const std::uint8_t& key);
+    void set_key_down_none();
+
     //! @brief Returns a reference to the general purpose cpu registers (i.e V0-V15)
     const std::array<std::uint8_t, 16>& get_gpr() const;
 
@@ -140,6 +143,12 @@ public:
 
     //! @brief Get Program Counter
     const std::uint16_t get_pc() const;
+
+    //! @brief Get Delay Timer
+    const std::uint8_t get_dt() const;
+
+    //! @brief Get Sound Timer
+    const std::uint8_t get_st() const;
 
     //! @brief Get stack
     const std::array<std::uint16_t, 16> get_stack() const;
