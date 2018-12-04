@@ -1,6 +1,6 @@
 nchip8
 ====
-A CHIP-8 interpreter for those who like the terminal.
+A work-in-progress CHIP-8 interpreter for those who like the terminal.
 requires ncurses
 
 ![](https://giant.gfycat.com/DisguisedWeirdBlackfly.gif)
