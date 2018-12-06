@@ -239,7 +239,7 @@ void cpu::execute_op_at_pc()
 
         // disassemble and print to log
         nchip8::log << std::hex << this->m_pc << ' ';
-        nchip8::log << " " << std::hex << instruction << " ";
+        nchip8::log << " " << nchip8::inst << instruction << " ";
         handler.value().m_dasm_op(operands,nchip8::log);
         nchip8::log << std::endl;
 
@@ -251,8 +251,6 @@ void cpu::execute_op_at_pc()
         {
             // go to the next instruction
             this->m_pc+=2;
-
-            nchip8::log << this->read_u16(this->m_pc);
         }
 
         return;

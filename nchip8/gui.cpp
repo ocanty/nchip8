@@ -107,7 +107,7 @@ void gui::loop()
 
     while (!die)
     {
-        //update_windows_on_resize();
+        update_windows_on_resize();
         update_log_on_global_log_change();
         update_screen_window();
         update_reg_window();
@@ -115,10 +115,10 @@ void gui::loop()
         // we achieve multiple key inputs by giving each key a score
         // every frame we decrement the score
         // if the score is decremented, the key is no longer considered pressed
-        int c = getch();
 
         // mappings are stored lowercase,
         // tolower will pass thru non-characters as-well (e.g. 0->0)
+        int c = getch();
         int char_lowered = std::tolower(c);
 
         // if we didnt get a bad char and there is a valid mapping
@@ -133,7 +133,7 @@ void gui::loop()
         }
 
         // gui aims to be at 60fps
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000/60));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000/24));
     }
 }
 
@@ -216,18 +216,24 @@ void gui::update_screen_window()
             // check the row of pixels below and see if we can get a group of two vertical pixels
             bool set_bottom = m_cpu_daemon->get_screen_xy(x, y + 1);
 
-            if (set_top && set_bottom) { line += L"█"; /* █ */ continue; }
-            if (set_top)               { line += L"▀"; /* ▀ */ continue; }
-            if (set_bottom)            { line += L"▄"; /* ▄ */ continue; }
+            if (set_top && set_bottom)
+            { line += L"█"; /* █ */ continue; }
+            if (set_top)
+            { line += L"▀"; /* ▀ */ continue; }
+            if (set_bottom)
+            { line += L"▄"; /* ▄ */ continue; }
             line += ' ';
+
         }
 
         mvwaddwstr(m_screen_window.get(), draw_y, 1, line.c_str());
+
         line.clear();
         draw_y++;
     }
 
     ::wrefresh(m_screen_window.get());
+
 }
 
 void gui::update_reg_window()
@@ -250,8 +256,16 @@ void gui::update_reg_window()
     mvwaddstr(m_reg_window.get(), 19, 1, row.str().c_str());
     row.str(""); row.clear();
 
-    row << " I" << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_i();
+    row << " I " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_i();
     mvwaddstr(m_reg_window.get(), 20, 1, row.str().c_str());
+    row.str(""); row.clear();
+
+    row << "ST " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_st();
+    mvwaddstr(m_reg_window.get(), 21, 1, row.str().c_str());
+    row.str(""); row.clear();
+
+    row << "DT " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_dt();
+    mvwaddstr(m_reg_window.get(), 22, 1, row.str().c_str());
     row.str(""); row.clear();
 
 

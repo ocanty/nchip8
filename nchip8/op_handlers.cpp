@@ -29,7 +29,7 @@ cpu::op_handler cpu::CLS
     {0x0, 0x0, 0xE, 0x0},
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        cpu.m_screen.empty();
+        cpu.m_screen.fill(0);
     },
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
@@ -50,7 +50,7 @@ cpu::op_handler cpu::RET
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
     {
-        ss << "RET" << std::hex << operands.m_nnn;
+        ss << "RET " << std::hex << operands.m_nnn;
     }
 };
 
@@ -99,7 +99,7 @@ cpu::op_handler cpu::SE_VX_KK
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "SE V" << nchip8::x << operands.m_x << ", " <<  nchip8::kk << operands.m_kk;
+        ss << "SE " << nchip8::V << operands.m_x << ", " <<  nchip8::kk << operands.m_kk;
     }
 };
 
@@ -115,7 +115,7 @@ cpu::op_handler cpu::SNE_VX_KK
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "SNE V" << nchip8::x << operands.m_x << ", " << nchip8::kk << operands.m_kk;
+        ss << "SNE " << nchip8::V << operands.m_x << ", " << nchip8::kk << operands.m_kk;
     }
 };
 
@@ -131,7 +131,7 @@ cpu::op_handler cpu::SE_VX_VY
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "SE V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+        ss << "SE " << nchip8::V << operands.m_x << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -147,7 +147,7 @@ cpu::op_handler cpu::LD_VX_KK
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "LD V"  << nchip8::x << operands.m_x << ", " << nchip8::kk << operands.m_kk;
+        ss << "LD "  << nchip8::V << operands.m_x << ", " << nchip8::kk << operands.m_kk;
 
     }
 };
@@ -164,7 +164,7 @@ cpu::op_handler cpu::ADD_VX_KK
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "ADD V" << nchip8::x << operands.m_x << ", " << nchip8::kk << operands.m_kk;
+        ss << "ADD " << nchip8::V << operands.m_x << ", " << nchip8::kk << operands.m_kk;
     }
 };
 
@@ -180,7 +180,7 @@ cpu::op_handler cpu::LD_VX_VY
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "LD V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+        ss << "LD " << nchip8::V << operands.m_x << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -196,7 +196,7 @@ cpu::op_handler cpu::OR_VX_VY
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "OR V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+        ss << "OR " << nchip8::V << operands.m_x << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -212,7 +212,7 @@ cpu::op_handler cpu::AND_VX_VY
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "AND V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+        ss << "AND " << nchip8::V << operands.m_x << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -228,7 +228,7 @@ cpu::op_handler cpu::XOR_VX_VY
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "XOR V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+        ss << "XOR " << nchip8::V << operands.m_x << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -250,7 +250,7 @@ cpu::op_handler cpu::ADD_VX_VY
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "ADD V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+        ss << "ADD " << nchip8::V << operands.m_x << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -271,7 +271,7 @@ cpu::op_handler cpu::SUB_VX_VY
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "SUB V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+        ss << "SUB " << nchip8::V << operands.m_x << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -291,7 +291,7 @@ cpu::op_handler cpu::SHR_VX_VY
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "SHR " << nchip8::x << operands.m_x; // << ", V" << nchip8::y << operands.m_y;
+        ss << "SHR " << nchip8::V << operands.m_x; // << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -313,7 +313,7 @@ cpu::op_handler cpu::SUBN_VX_VY
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "SUBN " << nchip8::x << operands.m_x  << ", V" << nchip8::y << operands.m_y;
+        ss << "SUBN " << nchip8::V << operands.m_x  << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -333,7 +333,7 @@ cpu::op_handler cpu::SHL_VX_VY
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "SHL " << nchip8::x << operands.m_x; // << ", V" << nchip8::y << operands.m_y;
+        ss << "SHL " << nchip8::V << operands.m_x; // << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -352,7 +352,7 @@ cpu::op_handler cpu::SNE_VX_VY
 
     [](const cpu::operand_data& operands, std::stringstream& ss)
     {
-        ss << "SNE V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+        ss << "SNE " << nchip8::V << operands.m_x << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -403,7 +403,7 @@ cpu::op_handler cpu::RND_VX_KK
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
     {
-        ss << "RND V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y;
+        ss << "RND " << nchip8::V << operands.m_x << ", " << nchip8::V << operands.m_y;
     }
 };
 
@@ -439,7 +439,7 @@ cpu::op_handler cpu::DRW_VX_VY_N
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
     {
-        ss << "DRW V" << nchip8::x << operands.m_x << ", V" << nchip8::y << operands.m_y << ", " << nchip8::n << operands.m_n;
+        ss << "DRW " << nchip8::V << operands.m_x << ", " << nchip8::V << operands.m_y << ", " << nchip8::n << operands.m_n;
     }
 };
 
@@ -466,7 +466,7 @@ cpu::op_handler cpu::SKP_VX
 // Skip next instruction if key with the value of Vx is not pressed.
 cpu::op_handler cpu::SKNP_VX
 {
-    {0xE, DATA, 0x9, 0xE},
+    {0xE, DATA, 0xA, 0x1},
     [](cpu &cpu, const cpu::operand_data &operands)
     {
         if(cpu.m_key_down != cpu.m_gpr[operands.m_x])
