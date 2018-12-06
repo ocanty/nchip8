@@ -9,6 +9,11 @@ namespace nchip8
 
 std::stringstream log;
 
+std::ostream& inst(std::ostream& out)
+{
+    return out << std::showbase << std::setfill('0') << std::setw(4) << std::hex;
+}
+
 std::ostream& nnn(std::ostream& out)
 {
     return out << std::showbase << std::setfill('0') << std::setw(3) << std::hex;
@@ -21,29 +26,12 @@ std::ostream& n(std::ostream& out)
 
 std::ostream& V(std::ostream& out)
 {
-    return out << "V" << std::hex << std::uppercase;
+    return out << "V" << std::noshowbase << std::hex << std::uppercase;
 }
 
 std::ostream& kk(std::ostream& out)
 {
     return out << std::showbase << std::setfill('0') << std::setw(2) << std::hex;
 }
-
-std::ostream& x(std::ostream& out)
-{
-    return out << std::setfill('0') << std::setw(2) << std::hex;
-}
-
-std::ostream& y(std::ostream& out)
-{
-    return out << std::setfill('0') << std::setw(2) << std::hex;
-}
-
-std::ostream& clr(std::ostream& out)
-{
-    std::cout.fill();
-    return out << std::dec << std::setw(1);
-}
-
 
 }

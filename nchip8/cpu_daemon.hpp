@@ -26,7 +26,7 @@ class cpu_daemon
 public:
     cpu_daemon();
 
-    ~cpu_daemon();
+    virtual ~cpu_daemon();
 
     //! @brief Message type of message to be passed to cpu
     enum cpu_message_type : std::uint8_t
@@ -153,6 +153,8 @@ public:
     //! @brief Get stack
     const std::array<std::uint16_t, 16> get_stack() const;
 
+
+
 private:
     //! CPU instance
     cpu m_cpu;
@@ -160,7 +162,6 @@ private:
     cpu_state m_cpu_state;
 
     std::thread m_cpu_thread;
-
     void cpu_thread();
 
     //! Locked when a message is being passed, or handled

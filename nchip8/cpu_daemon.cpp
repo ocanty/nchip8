@@ -53,7 +53,7 @@ void cpu_daemon::cpu_thread()
 {
     bool die = false;
 
-    while (!die)
+    while(!die)
     {
         // if the message queue is not empty
         while (!m_unhandled_messages.empty())
@@ -69,7 +69,7 @@ void cpu_daemon::cpu_thread()
             {
                 // call all the message handlers
                 // using cpu_message_handler = std::function<void(const cpu_message &)>;
-                for (cpu_message_handler& handler : m_message_handlers.at(msg.m_type))
+                for (cpu_message_handler &handler : m_message_handlers.at(msg.m_type))
                 {
                     handler(msg);
 
@@ -81,8 +81,11 @@ void cpu_daemon::cpu_thread()
         }
 
 
-        m_cpu.execute_op_at_pc();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        for (int i = 0; i < 1; i++)
+        {
+            m_cpu.execute_op_at_pc();
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000/60));
     }
 }
 

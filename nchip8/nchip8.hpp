@@ -22,7 +22,7 @@ class nchip8_app
 public:
     nchip8_app(const std::vector<std::string> &args);
 
-    ~nchip8_app();
+    virtual ~nchip8_app();
 
 private:
     void process_arguments();

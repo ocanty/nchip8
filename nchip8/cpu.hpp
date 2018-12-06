@@ -22,7 +22,7 @@ class cpu
 public:
     cpu();
 
-    ~cpu();
+    virtual ~cpu();
 
     //! @brief  Clears RAM, registers, the stack, screen etc...
     void reset();

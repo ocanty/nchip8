@@ -91,7 +91,7 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args)
 
 nchip8_app::~nchip8_app()
 {
-    // TODO: Shutdown curses
+
 }
 
 }

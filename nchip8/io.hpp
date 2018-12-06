@@ -18,11 +18,19 @@ namespace nchip8
 //! @see gui.hpp, update_logs_on_global_log_change is what empties this log to gui
 extern std::stringstream log;
 
+//! @brief Instruction pretty-print
+std::ostream& inst(std::ostream& out);
+
+//! @brief Address pretty-print
 std::ostream& nnn(std::ostream& out);
+
+//! @brief Nibble pretty-print
 std::ostream& n(std::ostream& out);
+
+//! @brief Byte-value pretty-print
 std::ostream& kk(std::ostream& out);
-std::ostream& x(std::ostream& out);
-std::ostream& y(std::ostream& out);
+
+//! @brief Register pretty-print
 std::ostream& V(std::ostream& out);
 
 }

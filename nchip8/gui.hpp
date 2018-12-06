@@ -25,7 +25,7 @@ public:
     //!             that the GUI will display the screen, disassembly & status of
     gui(const std::shared_ptr<cpu_daemon>& cpu);
 
-    ~gui();
+    virtual ~gui();
 
     //! @brief Start the GUI logic thread, this will block input and the main thread!
     void loop();
