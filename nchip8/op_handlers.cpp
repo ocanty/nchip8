@@ -50,7 +50,7 @@ cpu::op_handler cpu::RET
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
     {
-        ss << "RET " << std::hex << operands.m_nnn;
+        ss << "RET ";
     }
 };
 
@@ -73,8 +73,12 @@ cpu::op_handler cpu::CALL
     { 0x2, DATA, DATA, DATA },
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        cpu.m_sp++;
-        cpu.m_stack[cpu.m_sp] = cpu.m_pc;
+        cpu.m_sp++; // get space on the stack to store return value
+
+        // store return address (which is the instruction after current PC)
+        cpu.m_stack[cpu.m_sp] = cpu.m_pc + 0x2;
+
+        // jump
         cpu.m_pc = operands.m_nnn;
     },
 
