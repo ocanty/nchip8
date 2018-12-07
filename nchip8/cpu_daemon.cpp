@@ -81,7 +81,7 @@ void cpu_daemon::cpu_thread()
         }
 
 
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < 150; i++)
         {
             m_cpu.execute_op_at_pc();
         }

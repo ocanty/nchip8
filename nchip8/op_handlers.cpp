@@ -619,12 +619,12 @@ cpu::op_handler cpu::LD_imm_I_VX
     {0xF, DATA, 0x5, 0x5},
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        for(int i = 0; i < operands.m_x; i++)
+        for(int i = 0; i <= operands.m_x; ++i)
         {
             cpu.m_ram[cpu.m_i + i] = cpu.m_gpr[i];
         }
 
-        cpu.m_i = cpu.m_i = operands.m_x + 1;
+        cpu.m_i += operands.m_x + 1;
     },
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
@@ -642,12 +642,12 @@ cpu::op_handler cpu::LD_VX_imm_I
     {0xF, DATA, 0x6, 0x5},
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        for(int i = 0; i < operands.m_x; i++)
+        for(int i = 0; i <= operands.m_x; ++i)
         {
             cpu.m_gpr[i] = cpu.m_ram[cpu.m_i + i];
         }
 
-        cpu.m_i = cpu.m_i = operands.m_x + 1;
+        cpu.m_i += operands.m_x + 1;
     },
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
