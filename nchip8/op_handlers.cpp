@@ -659,5 +659,6 @@ cpu::op_handler cpu::LD_VX_imm_I
         ss << "LD " << nchip8::V << operands.m_x << ", [I]";
     }
 };
+
 }
 #endif //NCHIP8_OP_HANDLERS_HPP

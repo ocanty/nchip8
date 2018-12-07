@@ -24,7 +24,7 @@ cpu_daemon::cpu_daemon() :
 
     this->register_message_handler(cpu_message_type::SetStateRunning, [this](const cpu_message &msg)
     {
-        nchip8::log << "[cpu_daemon] set cpu running" << '\n';
+        nchip8::log << "[cpu_daemon] set cpu running" << std::endl;
         this->set_cpu_state(cpu_state::running);
     });
 
@@ -81,11 +81,8 @@ void cpu_daemon::cpu_thread()
         }
 
 
-        for (int i = 0; i < 150; i++)
-        {
-            m_cpu.execute_op_at_pc();
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000/60));
+        m_cpu.execute_op_at_pc();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000/m_clock_speed));
     }
 }
 
@@ -162,6 +159,12 @@ void cpu_daemon::set_key_down(const std::uint8_t &key)
 void cpu_daemon::set_key_down_none()
 {
     m_cpu.set_key_down_none();
+}
+
+void cpu_daemon::set_cpu_clockspeed(const size_t &speed)
+{
+    nchip8::log << "[cpu_daemon] set clock speed to " << speed << "Hz " << std::endl;
+    m_clock_speed = speed;
 }
 
 }

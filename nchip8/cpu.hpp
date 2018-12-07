@@ -70,7 +70,7 @@ public:
 
 private:
     //! CHIP-8 keypad is mapped to nibble i.e 0x0-0xF of keys
-    //! tue
+    //! optional if no key down
     std::optional<std::uint8_t> m_key_down;
 
     //! Screen

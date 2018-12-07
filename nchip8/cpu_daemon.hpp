@@ -116,6 +116,8 @@ public:
     //! @brief Set cpu_state
     void set_cpu_state(const cpu_state &);
 
+    void set_cpu_clockspeed(const size_t&);
+
     //! @brief Returns current screen mode
     //! @see cpu::screen_mode
     const cpu::screen_mode& get_screen_mode() const;
@@ -156,6 +158,9 @@ public:
 
 
 private:
+    //! The number of times a second we execute a CPU cycle
+    std::size_t m_clock_speed = 500;
+
     //! CPU instance
     cpu m_cpu;
 

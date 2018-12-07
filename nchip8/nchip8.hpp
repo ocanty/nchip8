@@ -20,12 +20,15 @@ namespace nchip8
 class nchip8_app
 {
 public:
+    //! @brief Constructor
+    //! @param args Vector of string arguments
     nchip8_app(const std::vector<std::string> &args);
 
-    virtual ~nchip8_app();
+    //! @brief Destructor
+    virtual ~nchip8_app() = default;
+
 
 private:
-    void process_arguments();
 
     std::unique_ptr<gui> m_gui;
     std::shared_ptr<cpu_daemon> m_cpu_daemon;

@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iomanip>
 #include <stdexcept>
+#include <string>
 
 namespace nchip8
 {
@@ -23,7 +24,7 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args)
     }
 
     // complain if they don't supply a file
-    if (args.size() != 2) // args contains [executable,first_argument]
+    if (args.size() < 2) // args contains [executable,first_argument]
     {
         throw std::invalid_argument("No ROM! (Usage: nchip8 <path to rom>");
     }
@@ -84,13 +85,13 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args)
         }
     );
 
+    if(args.size() > 2)
+    {
+        m_cpu_daemon->set_cpu_clockspeed(std::stoi(args.at(2)));
+    }
+
     m_gui = std::make_unique<gui>(m_cpu_daemon);
     m_gui->loop(); // this is blocking
-
-}
-
-nchip8_app::~nchip8_app()
-{
 
 }
 
