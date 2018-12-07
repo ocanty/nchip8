@@ -288,7 +288,7 @@ cpu::op_handler cpu::SHR_VX_VY
     { 0x8, DATA, DATA, 0x6 },
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        cpu.m_gpr[0xF] = (cpu.m_gpr[operands.m_x] & 0x1 ? 1 : 0); // LSB
+        cpu.m_gpr[0xF] = cpu.m_gpr[operands.m_x] & 0x1;
         cpu.m_gpr[operands.m_x] >>= 1;
 
     },
@@ -330,7 +330,7 @@ cpu::op_handler cpu::SHL_VX_VY
     { 0x8, DATA, DATA, 0xE },
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        cpu.m_gpr[0xF] = (cpu.m_gpr[operands.m_x] & 0x0001 ? 1 : 0); // LSB
+        cpu.m_gpr[0xF] = cpu.m_gpr[operands.m_x] >> 7; // MSB
         cpu.m_gpr[operands.m_x] <<= 1;
 
     },
