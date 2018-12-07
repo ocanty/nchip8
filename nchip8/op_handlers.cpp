@@ -628,7 +628,7 @@ cpu::op_handler cpu::LD_imm_I_VX
             cpu.m_ram[cpu.m_i + i] = cpu.m_gpr[i];
         }
 
-        cpu.m_i += operands.m_x + 1;
+        //cpu.m_i += operands.m_x + 1;
     },
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
@@ -651,7 +651,7 @@ cpu::op_handler cpu::LD_VX_imm_I
             cpu.m_gpr[i] = cpu.m_ram[cpu.m_i + i];
         }
 
-        cpu.m_i += operands.m_x + 1;
+        //cpu.m_i += operands.m_x + 1;
     },
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
