@@ -213,17 +213,19 @@ void cpu::execute_op_at_pc()
             std::chrono::high_resolution_clock::now() - last_clock
         ).count();
 
-        // ST and DT are meant to be decremented at 60hz
-        // we work out how many ticks have passed
-        auto ticks = delta_duration_ms / (1000/60);
+        // if more than a 60th of a second has passed
+        if(delta_duration_ms > (1000/60)) {
 
-        // subtract ticks or force timers to zero if enough ticks to totally empty them had elapsed
-        if(ticks > m_dt) { m_dt = 0; } else { m_dt -= ticks; }
-        if(ticks > m_st) { m_st = 0; } else { m_st -= ticks; }
+            // discover the number of ticks that have passed, aka how many 60ths of a second have passed
+            unsigned long ticks = delta_duration_ms / (1000/60);
 
-        // update the clock so the next delta works correctly
-        last_clock = std::chrono::high_resolution_clock::now();
+            // update the clock
+            last_clock = std::chrono::high_resolution_clock::now();
 
+            if(ticks >= m_dt) { m_dt = 0; } else { m_dt -= ticks; }
+            if(ticks >= m_st) { m_st = 0; } else { m_st -= ticks; }
+
+        }
 
         // if the sound timer is non-zero sound a buzz
         if(m_st > 0) {
