@@ -596,17 +596,21 @@ cpu::op_handler cpu::LD_F_VX
 };
 
 // Fx33 - LD B, Vx
+// stores BCD representation of VX in I, I+1, I+2
 cpu::op_handler cpu::LD_B_VX
 {
     {0xF, DATA, 0x3, 0x3},
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        // TODO: implement
+        std::uint8_t& val = cpu.m_gpr[operands.m_x];
+        cpu.m_ram[cpu.m_i + 2] = val % 10;          // ones digit
+        cpu.m_ram[cpu.m_i + 1] = (val / 10) % 10;   // tens digit
+        cpu.m_ram[cpu.m_i]     = (val / 100);       // hundreds digit
     },
 
     [](const cpu::operand_data &operands, std::stringstream &ss)
     {
-        ss << "LD F, " << nchip8::V << operands.m_x;
+        ss << "LD B, " << nchip8::V << operands.m_x;
     }
 };
 
