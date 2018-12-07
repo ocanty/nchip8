@@ -238,7 +238,7 @@ void cpu::execute_op_at_pc()
         operand_data operands = get_operand_data_from_instruction(instruction);
 
         // disassemble and print to log
-        nchip8::log << std::hex << this->m_pc << ' ';
+        nchip8::log << nchip8::nnn << this->m_pc << ' ';
         nchip8::log << " " << nchip8::inst << instruction << " ";
         handler.value().m_dasm_op(operands,nchip8::log);
         nchip8::log << std::endl;
