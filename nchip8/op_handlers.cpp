@@ -429,12 +429,12 @@ cpu::op_handler cpu::DRW_VX_VY_N
             for(int i = 0; i < 8 ; i++)
             {
                 auto on = cpu.get_screen_xy(x, y);
-                if(on == true && sprite_byte[7-i] == false) { cpu.m_gpr[0xF] = 1; }
+                if(on != sprite_byte[7-i]) { cpu.m_gpr[0xF] = 1; }
                 cpu.set_screen_xy(x, y, sprite_byte[7-i] ^ on);
                 x += 1;
 
                 x %= 64;
-            }
+            }.
             x = cpu.m_gpr[operands.m_x];
             y++;
             y %= 32;
