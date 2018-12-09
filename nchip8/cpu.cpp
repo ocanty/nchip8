@@ -49,10 +49,10 @@ void cpu::reset()
 {
     // clear registers and memory
     m_gpr.fill(0);
-    m_ram.fill(0xCC);
+    m_ram.fill(0x00);
 
     m_pc = 0x200;
-    m_stack.fill(0xBEEF); // fill the stack with junk
+    m_stack.fill(0x0000); // fill the stack with junk
 
     m_dt = 0;
     m_st = 0;
