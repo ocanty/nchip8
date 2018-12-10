@@ -65,6 +65,8 @@ void cpu::reset()
             i++;
         }
     }
+
+    m_keys_down.fill(false);
 }
 
 bool cpu::load_rom(const std::vector<std::uint8_t> &rom, const uint16_t& load_addr)
@@ -330,12 +332,17 @@ void cpu::set_screen_xy(const std::uint8_t &x, const std::uint8_t &y, const bool
 
 void cpu::set_key_down(const std::uint8_t &key)
 {
-    m_key_down = key;
+    m_keys_down.at(key) = true;
+    m_last_key_down = key;
 }
 
-void cpu::set_key_down_none()
+void cpu::set_key_up(const std::uint8_t &key)
 {
-    m_key_down = std::nullopt;
+    m_keys_down.at(key) = false;
+
+    if(key == m_last_key_down) {
+        m_last_key_down = std::nullopt;
+    }
 }
 
 }

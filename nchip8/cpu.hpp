@@ -63,15 +63,17 @@ public:
     //! @brief Set the supplied key as down
     void set_key_down(const std::uint8_t& key);
 
-    //! @brief Set no key down
-    void set_key_down_none();
+    //! @brief Set key up
+    void set_key_up(const std::uint8_t& key);
 
     friend class cpu_daemon; //! We allow the daemon watcher to access data in the CPU
 
 private:
-    //! CHIP-8 keypad is mapped to nibble i.e 0x0-0xF of keys
-    //! optional if no key down
-    std::optional<std::uint8_t> m_key_down;
+    //! @brief The last key that was down
+    std::optional<std::uint8_t> m_last_key_down;
+
+    //! @brief array indexed by key code (0x0-0xF),
+    std::array<bool,16> m_keys_down;
 
     //! Screen
     std::array<bool, 128*64> m_screen;

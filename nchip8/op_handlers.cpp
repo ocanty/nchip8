@@ -434,7 +434,7 @@ cpu::op_handler cpu::DRW_VX_VY_N
                 x += 1;
 
                 x %= 64;
-            }.
+            }
             x = cpu.m_gpr[operands.m_x];
             y++;
             y %= 32;
@@ -454,7 +454,7 @@ cpu::op_handler cpu::SKP_VX
     {0xE, DATA, 0x9, 0xE},
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        if(cpu.m_key_down == cpu.m_gpr[operands.m_x])
+        if(cpu.m_keys_down.at(cpu.m_gpr[operands.m_x]))
         {
             cpu.m_pc += 0x4;
         }
@@ -473,7 +473,7 @@ cpu::op_handler cpu::SKNP_VX
     {0xE, DATA, 0xA, 0x1},
     [](cpu &cpu, const cpu::operand_data &operands)
     {
-        if(cpu.m_key_down != cpu.m_gpr[operands.m_x])
+        if(!cpu.m_keys_down.at(cpu.m_gpr[operands.m_x]))
         {
             cpu.m_pc += 0x4;
         }
@@ -509,14 +509,14 @@ cpu::op_handler cpu::LD_VX_K
     [](cpu &cpu, const cpu::operand_data &operands)
     {
          // wait for the value of key to change to valid
-        while(cpu.m_key_down == std::nullopt)
+        while(cpu.m_last_key_down == std::nullopt)
         {
 
         }
 
-        if(cpu.m_key_down != std::nullopt)
+        if(cpu.m_last_key_down != std::nullopt)
         {
-            cpu.m_gpr[operands.m_x] = cpu.m_key_down.value();
+            cpu.m_gpr[operands.m_x] = cpu.m_last_key_down.value();
         }
     },
 

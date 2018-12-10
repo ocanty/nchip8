@@ -111,26 +111,7 @@ void gui::loop()
         update_log_on_global_log_change();
         update_screen_window();
         update_reg_window();
-
-        // we achieve multiple key inputs by giving each key a score
-        // every frame we decrement the score
-        // if the score is decremented, the key is no longer considered pressed
-
-        // mappings are stored lowercase,
-        // tolower will pass thru non-characters as-well (e.g. 0->0)
-        int c = getch();
-        int char_lowered = std::tolower(c);
-
-        // if we didnt get a bad char and there is a valid mapping
-        // pass it to the cpu
-        if(c != ERR && key_mapping.count(char_lowered))
-        {
-            m_cpu_daemon->set_key_down(key_mapping.at(char_lowered));
-        }
-        else
-        {
-            m_cpu_daemon->set_key_down_none();
-        }
+        update_keys();
 
         // gui aims to be at 60fps
         std::this_thread::sleep_for(std::chrono::milliseconds(1000/24));
@@ -270,6 +251,48 @@ void gui::update_reg_window()
 
 
     ::wrefresh(m_reg_window.get());
+}
+
+void gui::update_keys()
+{
+    // key chars are stored lowercase,
+    // tolower will pass thru non-characters as-well (e.g. 0->0)
+    int c = getch();
+    int char_lowered = std::tolower(c);
+
+    // if we didnt get a bad char and there is a valid mapping
+    // tell the cpu the key is down
+    if(c != ERR && key_mapping.count(char_lowered))
+    {
+        // if a valid character -> key map exists, tell the cpu the key is down
+        if(key_mapping.count(char_lowered))
+        {
+            m_cpu_daemon->set_key_down(key_mapping.at(char_lowered));
+        }
+    }
+
+    // curses does not have a method of knowing if multiple keys are pressed
+    // we achieve multiple key inputs by giving each key a score
+    // every frame we decrement the score
+    // if the score is decremented, the key is no longer considered pressed
+    m_keys[char_lowered] = 3;
+
+    for(auto& key : m_keys)
+    {
+        if(key.second > 0)
+        {
+            key.second--;
+        }
+        else // key press has departed
+        {
+            // bring the key back up (if it has a valid mapping)
+            if(key_mapping.count(key.first)) {
+                m_cpu_daemon->set_key_up(key_mapping.at(key.first));
+            }
+
+            m_keys.erase(key.first);
+        }
+    }
 }
 
 }

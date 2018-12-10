@@ -156,9 +156,9 @@ void cpu_daemon::set_key_down(const std::uint8_t &key)
     m_cpu.set_key_down(key);
 }
 
-void cpu_daemon::set_key_down_none()
+void cpu_daemon::set_key_up(const std::uint8_t &key)
 {
-    m_cpu.set_key_down_none();
+    m_cpu.set_key_up(key);
 }
 
 void cpu_daemon::set_cpu_clockspeed(const size_t &speed)

@@ -67,8 +67,18 @@ private:
     //! @brief Redraw's all the windows to the current terminal height and width
     void rebuild_windows();
 
+    //! @brief Update keys
+    void update_keys();
+
     //! @brief  Map what ncurses chracters to what keypad key
     static const std::unordered_map<int, std::uint8_t> key_mapping;
+
+    //! @brief The current keys that have been pressed
+    //! @details  Because ncurses only tells us the current key that is pushed
+    //!           and we want to have multi-key input into the cpu
+    //!           we assign each pushed key a score of 100 that is decremented at 60Hz
+    //!           when this reaches 0 the key is considered no longer pushed
+    std::unordered_map<int, std::uint8_t> m_keys;
 
 };
 
