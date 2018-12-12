@@ -92,8 +92,11 @@ void cpu_daemon::cpu_thread()
             m_unhandled_messages.pop();
         }
 
-        m_cpu.execute_op_at_pc();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000/m_clock_speed));
+        if(m_cpu_state == cpu_state::running)
+        {
+            m_cpu.execute_op_at_pc();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000 / m_clock_speed));
+        }
     }
 }
 
