@@ -331,7 +331,7 @@ cpu::op_handler cpu::SHL_VX_VY
     [](cpu &cpu, const cpu::operand_data &operands)
     {
         cpu.m_gpr[0xF] = cpu.m_gpr[operands.m_x] >> 7; // MSB
-        cpu.m_gpr[operands.m_x] <<= 1;
+        cpu.m_gpr[operands.m_y] <<= 1;
 
     },
 
@@ -420,7 +420,7 @@ cpu::op_handler cpu::DRW_VX_VY_N
     {
         int x = cpu.m_gpr[operands.m_x];
         int y = cpu.m_gpr[operands.m_y];
-
+        cpu.m_gpr[0xF] = 0;
         for(int n = 0; n < operands.m_n; n++)
         {
             std::uint8_t line = cpu.m_ram.at(cpu.m_i + n);
@@ -428,16 +428,21 @@ cpu::op_handler cpu::DRW_VX_VY_N
 
             for(int i = 0; i < 8 ; i++)
             {
-                auto on = cpu.get_screen_xy(x, y);
-                if(on != sprite_byte[7-i]) { cpu.m_gpr[0xF] = 1; }
-                cpu.set_screen_xy(x, y, sprite_byte[7-i] ^ on);
-                x += 1;
+                bool set_on_sprite = sprite_byte[7-i];
 
+                if(set_on_sprite) {
+                    auto on = cpu.get_screen_xy(x, y);
+                    if(on) { cpu.m_gpr[0xF] = 1; }
+                    cpu.set_screen_xy(x, y, on ^ sprite_byte[7-i]);
+                }
+
+                x += 1;
                 x %= 64;
             }
             x = cpu.m_gpr[operands.m_x];
             y++;
             y %= 32;
+
         }
     },
 
