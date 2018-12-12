@@ -177,6 +177,37 @@ void gui::update_log_window()
     ::wrefresh(m_log_window.get());
 }
 
+// interpolates a screen string from the current frame to the previous one
+static void interp_screen(std::wstring& this_scr, std::wstring& prev_scr)
+{
+    // we need to interpolate the new screen with the previous one
+    // to prevent the flicker typically caused by unbuffered chip8
+    // we basically combine the previous frames pixels to this frame
+    for(std::size_t i = 0; i < this_scr.length(); i++)
+    {
+        auto last_scr_char = prev_scr[i];
+        auto this_scr_char = this_scr[i];
+
+        if(last_scr_char == L' '){ continue; } // nothing to interpolate
+
+
+        if(last_scr_char == L'█')
+        {
+            this_scr[i] = L'█';
+            continue;
+        }
+
+        if((last_scr_char == L'▀' && this_scr_char == L'▄') ||
+                (last_scr_char == L'▄' && this_scr_char == L'▀'))
+        {
+            this_scr[i] = L'█';
+            continue;
+        } else {
+            this_scr[i] = last_scr_char;
+        }
+    }
+}
+
 void gui::update_screen_window()
 {
     if (!m_cpu_daemon || !m_screen_window)
@@ -197,7 +228,7 @@ void gui::update_screen_window()
     // to prevent flickering we get the string that had been previously drawn on the screen
     // and interpolate the new screen
 
-    static std::wstring prev_scr(128*32, L' ');
+    static std::wstring prev_scr{std::wstring(L' ',128*32)};
 
     unsigned int width = (mode == cpu::screen_mode::hires_sc8 ? 128 : 64);
     unsigned int height = (mode == cpu::screen_mode::lores_c8 ? 64 : 32);
@@ -222,44 +253,21 @@ void gui::update_screen_window()
             if (set_bottom)
             { this_scr += L"▄"; /* ▄ */ continue; }
             
-            this_scr += L' '; continue;
-
+            this_scr += L' ';
         }
         this_scr += L'\n';
+
         // ncurses will wrap the next line to the first char (x = 0)
         // of the next line, (this is where the border is)
         // pad it by 1 space
-        // (this char will then be overriden by the border redraw below)
+        // (this char will then be overidden by the border redraw below)
         this_scr += L' ';
     }
 
     // save a copy of the current screen
     std::wstring this_scr_no_interp = this_scr;
 
-    // now we need to interpolate the new screen with the previous one
-    // to prevent the flicker typically caused by unbuffered chip8
-    for(std::size_t i = 0; i < this_scr.length(); i++)
-    {
-        auto last_scr_char = prev_scr[i];
-        auto this_scr_char = this_scr[i];
-
-        if(last_scr_char == L' '){ continue; } // nothing to interpolate
-
-
-        if(last_scr_char == L'█')
-        {
-            this_scr[i] = L'█';
-            continue;
-        }
-
-        if((last_scr_char == L'▀' && this_scr_char == L'▄') ||
-                (last_scr_char == L'▄' && this_scr_char == L'▀'))
-        {
-            this_scr[i] = L'█';
-            continue;
-        }
-
-    }
+    interp_screen(this_scr,prev_scr);
 
     // set prev frame for the next screen update
     prev_scr = this_scr_no_interp;
@@ -327,21 +335,21 @@ void gui::update_keys()
     // if the score is decremented, the key is no longer considered pressed
     m_keys[char_lowered] = 3;
 
-    for(auto& key : m_keys)
+    for(auto& [key, key_score] : m_keys)
     {
-        if(key.second > 0)
+        if(key_score > 0)
         {
-            key.second--;
+            key_score--;
         }
         else // key press has departed
         {
             // bring the key back up (if it has a valid mapping)
-            if(key_mapping.count(key.first)) {
-                m_cpu_daemon->set_key_up(key_mapping.at(key.first));
+            if(key_mapping.count(key)) {
+                m_cpu_daemon->set_key_up(key_mapping.at(key));
             }
 
             // erase from tracker
-            m_keys.erase(key.first);
+            m_keys.erase(key);
         }
     }
 }
