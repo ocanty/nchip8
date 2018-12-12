@@ -226,6 +226,11 @@ void gui::update_screen_window()
 
         }
         this_scr += L'\n';
+        // ncurses will wrap the next line to the first char (x = 0)
+        // of the next line, (this is where the border is)
+        // pad it by 1 space
+        // (this char will then be overriden by the border redraw below)
+        this_scr += L' ';
     }
 
     // save a copy of the current screen
