@@ -19,13 +19,24 @@ cpu_daemon::cpu_daemon() :
         nchip8::log << "[cpu_daemon] received rom: " << msg.m_data.size() << " bytes " << '\n';
 
         m_cpu.reset();
-        m_cpu.load_rom(msg.m_data, 0x200);
+        bool loaded = m_cpu.load_rom(msg.m_data, 0x200);
+
+        if(loaded)
+        {
+            nchip8::log << "[cpu_daemon] rom loaded" << '\n';
+            msg.m_callback();
+            return;
+        }
+
+        msg.m_on_error();
     });
 
     this->register_message_handler(cpu_message_type::SetStateRunning, [this](const cpu_message &msg)
     {
         nchip8::log << "[cpu_daemon] set cpu running" << std::endl;
         this->set_cpu_state(cpu_state::running);
+
+        msg.m_callback();
     });
 
 
@@ -55,31 +66,31 @@ void cpu_daemon::cpu_thread()
 
     while(!die)
     {
+
+        // lock the data access to the message queue
+        //std::lock_guard<std::mutex> lock(m_cpu_thread_mutex);
+
         // if the message queue is not empty
         while (!m_unhandled_messages.empty())
         {
-            // lock the data access to the message queue
-            std::lock_guard<std::mutex> lock(m_cpu_thread_mutex);
-
             // get front of queue
             const auto &msg = m_unhandled_messages.front();
 
             // does the message have message handlers? is it of the correct type?
             if (m_message_handlers.at(msg.m_type).size() > 0)
             {
+
                 // call all the message handlers
                 // using cpu_message_handler = std::function<void(const cpu_message &)>;
                 for (cpu_message_handler &handler : m_message_handlers.at(msg.m_type))
                 {
                     handler(msg);
-
                 }
             }
 
             // dispose of the message
             m_unhandled_messages.pop();
         }
-
 
         m_cpu.execute_op_at_pc();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000/m_clock_speed));
@@ -88,9 +99,8 @@ void cpu_daemon::cpu_thread()
 
 void cpu_daemon::send_message(const cpu_daemon::cpu_message &message)
 {
-    // prevent the cpu thread from reading/writing to the message queue
-    std::lock_guard<std::mutex> lock(this->m_cpu_thread_mutex);
-
+    // lock the data access to the message queue
+    std::lock_guard<std::mutex> lock(m_cpu_thread_mutex);
     // push our message
     m_unhandled_messages.push(message);
 }
@@ -163,7 +173,7 @@ void cpu_daemon::set_key_up(const std::uint8_t &key)
 
 void cpu_daemon::set_cpu_clockspeed(const size_t &speed)
 {
-    nchip8::log << "[cpu_daemon] set clock speed to " << speed << "Hz " << std::endl;
+    nchip8::log << "[cpu_daemon] set clock speed to " << std::dec << speed << "Hz " << std::endl;
     m_clock_speed = speed;
 }
 

@@ -53,19 +53,30 @@ void gui::rebuild_windows()
     ::nodelay(m_window.get(), TRUE);
     ::noecho(); // dont draw chars when entered
 
-    // 66 x 18 (64x16 excluding border)
+    ::start_color();
+
+    // use the terms colors
+    ::use_default_colors();
+
+    // get default term default colors
+    short term_fg, term_bg;
+    pair_content(COLOR_PAIR(0),&term_fg,&term_bg);
+
+    init_pair(1,COLOR_WHITE,term_bg);
+
+    // 66 x 18 (64x16 excluding border)f
     m_screen_window = std::shared_ptr<::WINDOW>(::newwin(18, 66, 0, 0), ::wdelch);
-    ::wborder(m_screen_window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
-    ::wrefresh(m_screen_window.get());
+    wattron(m_screen_window.get(),A_BOLD); // make whiter
+    wattron(m_screen_window.get(), COLOR_PAIR(1));
 
     m_log_window = std::shared_ptr<::WINDOW>(::newwin(10, 66, 18, 0), ::wdelch);
-    ::wborder(m_log_window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
-    ::wrefresh(m_log_window.get());
-    this->update_log_window();
+    wattron(m_log_window.get(),A_BOLD); // make whiter
+    wattron(m_log_window.get(), COLOR_PAIR(0));
 
     m_reg_window = std::shared_ptr<::WINDOW>(::newwin(28, 14, 0, 66), ::wdelch);
-    ::wborder(m_reg_window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
-    ::wrefresh(m_reg_window.get());
+    wattron(m_reg_window.get(), A_BOLD);
+    wattron(m_reg_window.get(), COLOR_PAIR(0));
+
 }
 
 void gui::update_windows_on_resize()
@@ -80,6 +91,7 @@ void gui::update_windows_on_resize()
     {
         m_window_w = new_term_w;
         m_window_h = new_term_h;
+        this->update_log_window();
         this->rebuild_windows();
     }
 }
@@ -87,7 +99,7 @@ void gui::update_windows_on_resize()
 /**
  *
  * Typical CHIP-8 keypad was to look like this:
-    1	2	3	C
+    1	2   3	C
     4	5	6	D
     7	8	9	E
     A	0	B	F
@@ -107,14 +119,14 @@ void gui::loop()
 
     while (!die)
     {
+        update_keys();
         update_windows_on_resize();
         update_log_on_global_log_change();
         update_screen_window();
         update_reg_window();
-        update_keys();
 
         // gui aims to be at 60fps
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000/24));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000/60));
     }
 }
 
@@ -131,6 +143,7 @@ void gui::update_log_on_global_log_change()
         }
 
         nchip8::log.str(""); nchip8::log.clear();
+
         this->update_log_window();
     }
 
@@ -181,14 +194,17 @@ void gui::update_screen_window()
     // ▀ to represent the bottom pixel being off, the top on
     // █ to represent 2 pixels above each-other
 
+    // to prevent flickering we get the string that had been previously drawn on the screen
+    // and interpolate the new screen
+
+    static std::wstring prev_scr(128*32, L' ');
+
     unsigned int width = (mode == cpu::screen_mode::hires_sc8 ? 128 : 64);
     unsigned int height = (mode == cpu::screen_mode::lores_c8 ? 64 : 32);
 
-    unsigned int draw_y = 1;
-
-    std::wstring line;
-
-    for (unsigned int y = 0; y < (height-1); y+=2)
+    // calculate current screen
+    std::wstring this_scr;
+    for (unsigned int y = 0; y < (height); y+=2)
     {
         for (unsigned int x = 0; x < width; x++)
         {
@@ -198,21 +214,53 @@ void gui::update_screen_window()
             bool set_bottom = m_cpu_daemon->get_screen_xy(x, y + 1);
 
             if (set_top && set_bottom)
-            { line += L"█"; /* █ */ continue; }
+            { this_scr += L"█"; /* █ */ continue; }
+
             if (set_top)
-            { line += L"▀"; /* ▀ */ continue; }
+            { this_scr += L"▀"; /* ▀ */ continue; }
+
             if (set_bottom)
-            { line += L"▄"; /* ▄ */ continue; }
-            line += ' ';
+            { this_scr += L"▄"; /* ▄ */ continue; }
+            
+            this_scr += L' '; continue;
 
         }
-
-        mvwaddwstr(m_screen_window.get(), draw_y, 1, line.c_str());
-
-        line.clear();
-        draw_y++;
+        this_scr += L'\n';
     }
 
+    // save a copy of the current screen
+    std::wstring this_scr_no_interp = this_scr;
+
+    // now we need to interpolate the new screen with the previous one
+    // to prevent the flicker typically caused by unbuffered chip8
+    for(std::size_t i = 0; i < this_scr.length(); i++)
+    {
+        auto last_scr_char = prev_scr[i];
+        auto this_scr_char = this_scr[i];
+
+        if(last_scr_char == L' '){ continue; } // nothing to interpolate
+
+
+        if(last_scr_char == L'█')
+        {
+            this_scr[i] = L'█';
+            continue;
+        }
+
+        if((last_scr_char == L'▀' && this_scr_char == L'▄') ||
+                (last_scr_char == L'▄' && this_scr_char == L'▀'))
+        {
+            this_scr[i] = L'█';
+            continue;
+        }
+
+    }
+
+    // set prev frame for the next screen update
+    prev_scr = this_scr_no_interp;
+
+    mvwaddwstr(m_screen_window.get(), 1, 1, this_scr.c_str());
+    ::wborder(m_screen_window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
     ::wrefresh(m_screen_window.get());
 
 }
@@ -249,7 +297,7 @@ void gui::update_reg_window()
     mvwaddstr(m_reg_window.get(), 22, 1, row.str().c_str());
     row.str(""); row.clear();
 
-
+    ::wborder(m_reg_window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
     ::wrefresh(m_reg_window.get());
 }
 
@@ -265,10 +313,7 @@ void gui::update_keys()
     if(c != ERR && key_mapping.count(char_lowered))
     {
         // if a valid character -> key map exists, tell the cpu the key is down
-        if(key_mapping.count(char_lowered))
-        {
-            m_cpu_daemon->set_key_down(key_mapping.at(char_lowered));
-        }
+        m_cpu_daemon->set_key_down(key_mapping.at(char_lowered));
     }
 
     // curses does not have a method of knowing if multiple keys are pressed
@@ -290,6 +335,7 @@ void gui::update_keys()
                 m_cpu_daemon->set_key_up(key_mapping.at(key.first));
             }
 
+            // erase from tracker
             m_keys.erase(key.first);
         }
     }

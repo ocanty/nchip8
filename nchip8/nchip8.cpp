@@ -64,26 +64,24 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args)
 
     m_cpu_daemon = std::make_shared<cpu_daemon>();
 
-    m_cpu_daemon->send_message({
-        cpu_daemon::cpu_message_type::LoadROM,
-        input_data,
-        []()
-        {
-            nchip8::log << "Could not load ROM!" << '\n';
-            exit(-1); // ew
-        }}
+    m_cpu_daemon->send_message(
+        cpu_daemon::cpu_message(
+            cpu_daemon::cpu_message_type::LoadROM,
+            input_data,
+            [this]()
+            {
+                // set the cpu running if the rom is loaded
+                m_cpu_daemon->send_message(
+                    cpu_daemon::cpu_message(cpu_daemon::cpu_message_type::SetStateRunning)
+                );
+            },
+
+            []() {
+                nchip8::log << "[nchip8] rom loading failed :(";
+            }
+        )
     );
 
-    m_cpu_daemon->send_message(
-        {
-            cpu_daemon::cpu_message_type::SetStateRunning,
-            {},
-            []()
-            {
-                
-            }
-        }
-    );
 
     if(args.size() > 2)
     {
