@@ -132,18 +132,21 @@ void gui::loop()
 
 void gui::update_log_on_global_log_change()
 {
-    if (!nchip8::log.str().empty())
+
+    bool log_updated = false;
+    static std::string line;
+
+    while (std::getline(nchip8::log, line) && !line.empty())
     {
-        static std::string line;
+        m_gui_log.push_back(line);
+        log_updated = true;
+        line.empty();
+    }
 
-        while (std::getline(nchip8::log, line) && !line.empty())
-        {
-            m_gui_log.push_back(line);
-            line.empty();
-        }
+    nchip8::log.str(""); nchip8::log.clear();
 
-        nchip8::log.str(""); nchip8::log.clear();
-
+    if(log_updated)
+    {
         this->update_log_window();
     }
 
