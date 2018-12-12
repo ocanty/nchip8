@@ -290,24 +290,26 @@ void gui::update_reg_window()
         row.str(""); row.clear();
     }
 
-    row << "PC " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_pc();
-    mvwaddstr(m_reg_window.get(), 18, 1, row.str().c_str());
-    row.str(""); row.clear();
+    // TODO: write a function for this spam
 
-    row << "SP " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_sp();
+    row << "PC " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_pc();
     mvwaddstr(m_reg_window.get(), 19, 1, row.str().c_str());
     row.str(""); row.clear();
 
-    row << " I " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_i();
+    row << "SP " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_sp();
     mvwaddstr(m_reg_window.get(), 20, 1, row.str().c_str());
     row.str(""); row.clear();
 
-    row << "ST " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_st();
+    row << " I " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_i();
     mvwaddstr(m_reg_window.get(), 21, 1, row.str().c_str());
     row.str(""); row.clear();
 
-    row << "DT " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_dt();
+    row << "ST " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_st();
     mvwaddstr(m_reg_window.get(), 22, 1, row.str().c_str());
+    row.str(""); row.clear();
+
+    row << "DT " << nchip8::nnn << (std::uint16_t)m_cpu_daemon->get_dt();
+    mvwaddstr(m_reg_window.get(), 23, 1, row.str().c_str());
     row.str(""); row.clear();
 
     ::wborder(m_reg_window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
