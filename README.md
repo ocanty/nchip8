@@ -2,7 +2,7 @@ nchip8
 ==
 A CHIP-8 emulator/interpreter that operates entirely in the terminal.
 
-Mainly for use over ssh for bored sysadmins
+Mainly for use over ssh by bored sysadmins
 
 ![](https://giant.gfycat.com/GratefulCookedHalicore.gif)
 
@@ -11,7 +11,7 @@ Building
 _Requires ncurses_
 
 ```
-git clone git@github.com:ocanty/nchip8.git
+git clone https://github.com/ocanty/nchip8.git
 cd nchip8
 cmake CMakeLists.txt
 make
