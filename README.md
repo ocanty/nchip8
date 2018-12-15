@@ -2,7 +2,6 @@ nchip8
 ==
 A CHIP-8 emulator/interpreter that operates entirely in the terminal.
 
-<<<<<<< HEAD
 Mainly for use over ssh for bored sysadmins
 
 ![](https://giant.gfycat.com/GratefulCookedHalicore.gif)
