@@ -5,3 +5,4 @@
 *.cmake
 CMakeCache.txt
 *.cbp
+Makefile
