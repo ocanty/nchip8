@@ -14,6 +14,7 @@
 #include <functional>
 
 #include "cpu.hpp"
+#include "cpu_message.hpp"
 
 namespace nchip8
 {
@@ -24,74 +25,11 @@ namespace nchip8
 class cpu_daemon
 {
 public:
+    //! @brief Constructor
     cpu_daemon();
 
+    //! @brief Destructor
     virtual ~cpu_daemon();
-
-    //! @brief Message type of message to be passed to cpu
-    enum cpu_message_type : std::uint8_t
-    {
-        Reset,              //! Resets the cpu. Clear registers & ram, PC = 0x200   m_data: none
-        LoadROM,            //! Writes a rom to cpu memory.                         m_data: vector of ROM binary
-        SetStateRunning,    //! Set cpu running
-        SetStatePaused,     //! Pause cpu at current instruction
-        _last               // Used to find amount of messages, keep at end of enum
-    };
-
-    //! @brief Message container
-    struct cpu_message
-    {
-    public:
-        explicit cpu_message(const cpu_message_type& type) :
-        m_type(type),
-        m_data({}),
-        m_callback([](){}),
-        m_on_error([](){})
-        { };
-
-        cpu_message(const cpu_message_type& type,
-                    std::vector<std::uint8_t> data) :
-        m_type(type),
-        m_data(std::move(data)),
-        m_callback([](){}),
-        m_on_error([](){})
-        { };
-
-        cpu_message(const cpu_message_type& type,
-                    std::vector<std::uint8_t> data,
-                    std::function<void(void)> callback) :
-        m_type(type),
-        m_data(std::move(data)),
-        m_callback(std::move(callback)),
-        m_on_error([](){})
-        { };
-
-        cpu_message(const cpu_message_type& type,
-                    std::vector<std::uint8_t> data,
-                    std::function<void(void)> callback,
-                    std::function<void(void)> error) :
-        m_type(type),
-        m_data(std::move(data)),
-        m_callback(std::move(callback)),
-        m_on_error(std::move(error))
-        { };
-
-        //! See cpu_message_type
-        cpu_message_type m_type;
-
-        //! Raw data, usually specified by message type
-        std::vector<std::uint8_t> m_data;
-
-        //! Called when the message has finished processing
-        //! (this is called in the cpu_thread!)
-        std::function<void(void)> m_callback;
-
-        //! This callback is called when an error occurs, see message type
-        std::function<void(void)> m_on_error;
-    };
-
-    //! A function of this type is called when the CPU receives a message
-    using cpu_message_handler = std::function<void(const cpu_message &)>;
 
     //! @brief          Send a message to the cpu thread
     //! @param message  The cpu_message structure

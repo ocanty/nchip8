@@ -12,12 +12,14 @@ cpu_daemon::cpu_daemon() :
     m_cpu_state(cpu_state::paused)
 {
     // create enough space to hold the handlers for each type
-    m_message_handlers.resize(cpu_daemon::cpu_message_type::_last);
+    m_message_handlers.resize(cpu_message_type::_last);
 
+    // handle rom loads
     this->register_message_handler(cpu_message_type::LoadROM, [this](const cpu_message &msg)
     {
         nchip8::log << "[cpu_daemon] received rom: " << msg.m_data.size() << " bytes " << '\n';
 
+        // reset cpu and load rom in
         m_cpu.reset();
         bool loaded = m_cpu.load_rom(msg.m_data, 0x200);
 
@@ -31,6 +33,7 @@ cpu_daemon::cpu_daemon() :
         msg.m_on_error();
     });
 
+    // when we're asked to set the cpu running
     this->register_message_handler(cpu_message_type::SetStateRunning, [this](const cpu_message &msg)
     {
         nchip8::log << "[cpu_daemon] set cpu running" << std::endl;
@@ -81,7 +84,7 @@ void cpu_daemon::cpu_thread()
             {
 
                 // call all the message handlers
-                // using cpu_message_handler = std::function<void(const cpu_message &)>;
+                // remember: using cpu_message_handler = std::function<void(const cpu_message &)>;
                 for (cpu_message_handler &handler : m_message_handlers.at(msg.m_type))
                 {
                     handler(msg);
@@ -100,7 +103,7 @@ void cpu_daemon::cpu_thread()
     }
 }
 
-void cpu_daemon::send_message(const cpu_daemon::cpu_message &message)
+void cpu_daemon::send_message(const cpu_message &message)
 {
     // lock the data access to the message queue
     std::lock_guard<std::mutex> lock(m_cpu_thread_mutex);
