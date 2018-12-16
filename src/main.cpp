@@ -14,12 +14,9 @@ int main(int argc, char** argv)
 
     for(int i = 0; i < argc; i++)
     {
-        args.emplace_back(std::string(argv[i]));
+        args.emplace_back(argv[i]);
     }
 
     nchip8::nchip8_app app(args);
-    std::this_thread::sleep_for(std::chrono::hours(std::numeric_limits<int>::max()));
-
-
     return 0;
 }

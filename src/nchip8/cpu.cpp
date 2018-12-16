@@ -150,8 +150,6 @@ std::optional<cpu::op_handler> cpu::get_op_handler_for_instruction(const std::ui
     std::uint8_t n1 = (op & 0x0F00) >> 8;
     std::uint8_t n0 = (op & 0xF000) >> 12;
 
-
-
     const auto &root = m_op_tree;
 
     if (root.count(n0) > 0)
