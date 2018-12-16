@@ -27,11 +27,14 @@ public:
     //! @brief Destructor
     virtual ~nchip8_app() = default;
 
-
+    //! @brief      Run the emulator application
+    //! @returns    The return code for the process/application
+    int run();
 private:
+    std::vector<std::string> m_args;
 
     std::unique_ptr<gui> m_gui;
-    std::shared_ptr<cpu_daemon> m_cpu_daemon;
+    std::unique_ptr<cpu_daemon> m_cpu_daemon;
 };
 
 }
