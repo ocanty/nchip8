@@ -21,11 +21,6 @@ cpu::cpu()
     this->reset();
 }
 
-cpu::~cpu()
-{
-
-}
-
 const std::vector<std::array<std::uint8_t,5>> font = {
     {0xF0, 0x90, 0x90, 0x90, 0xF0}, // 0
     {0x20, 0x60, 0x20, 0x20, 0x70}, // 1

@@ -19,8 +19,8 @@
 namespace nchip8
 {
 
-gui::gui(const std::shared_ptr<cpu_daemon>& cpu) :
-    m_cpu_daemon(cpu)
+gui::gui(std::unique_ptr<cpu_daemon>& cpu) :
+    m_cpu_daemon(std::move(cpu))
 {
     this->rebuild_windows();
     this->loop();
@@ -28,9 +28,15 @@ gui::gui(const std::shared_ptr<cpu_daemon>& cpu) :
 
 gui::~gui()
 {
-    // clenaup curses
+    // cleanup curses
+
+    // show cursor visible
     ::curs_set(1);
+
+    // clear screen
     clear();
+
+    // kill window
     ::endwin();
 }
 
@@ -43,16 +49,24 @@ void gui::rebuild_windows()
 
     m_window = std::shared_ptr<::WINDOW>(::initscr(), ::wdelch);
 
+    // disable newlines appended to input
     ::nonl();
+
+    // prevent flush on keypress
     ::intrflush(m_window.get(), FALSE);
+
+    // disable function/arrow/etc keys
     ::keypad(m_window.get(), TRUE);
-    ::curs_set(0); // disable cursor
+
+    // disable cursor
+    ::curs_set(0);
 
     // non blocking input
     ::cbreak();
     ::nodelay(m_window.get(), TRUE);
     ::noecho(); // dont draw chars when entered
 
+    // color
     ::start_color();
 
     // use the terms colors
@@ -119,6 +133,7 @@ void gui::loop()
 
     while (!die)
     {
+        // do gui tasks
         update_keys();
         update_windows_on_resize();
         update_log_on_global_log_change();
@@ -132,7 +147,6 @@ void gui::loop()
 
 void gui::update_log_on_global_log_change()
 {
-
     bool log_updated = false;
     static std::string line;
 

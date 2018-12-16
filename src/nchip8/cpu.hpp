@@ -22,7 +22,7 @@ class cpu
 public:
     cpu();
 
-    virtual ~cpu();
+    virtual ~cpu() noexcept = default;
 
     //! @brief  Clears RAM, registers, the stack, screen etc...
     void reset();
