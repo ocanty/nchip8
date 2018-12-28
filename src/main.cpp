@@ -18,5 +18,7 @@ int main(int argc, char** argv)
     }
 
     nchip8::nchip8_app app(args);
-    return app.run();
+    app.run();
+
+    return 0;
 }

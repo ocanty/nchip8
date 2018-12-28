@@ -21,10 +21,9 @@ class gui
 public:
     //! @brief Constructor
     //!
-    //! @param cpu  unique_ptr to the cpu_daemon
+    //! @param cpu  shared_ptr to the cpu_daemon
     //!             that the GUI will display the screen, disassembly & status of
-    //!             gui takes ownership of the pointer.
-    gui(std::unique_ptr<cpu_daemon>&);
+    gui(std::shared_ptr<cpu_daemon>& cpu);
 
     virtual ~gui();
 
@@ -32,7 +31,7 @@ public:
     void loop();
 
 private:
-    std::unique_ptr<cpu_daemon> m_cpu_daemon;
+    std::shared_ptr<cpu_daemon> m_cpu_daemon;
 
     //! Main window width
     int m_window_w = 0;

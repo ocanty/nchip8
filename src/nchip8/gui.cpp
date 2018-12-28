@@ -19,11 +19,12 @@
 namespace nchip8
 {
 
-gui::gui(std::unique_ptr<cpu_daemon>& cpu) :
-    m_cpu_daemon(std::move(cpu))
+gui::gui(std::shared_ptr<cpu_daemon>& cpu) :
+    m_cpu_daemon(cpu)
 {
+
+    auto e = m_cpu_daemon->get_gpr();
     this->rebuild_windows();
-    this->loop();
 }
 
 gui::~gui()
@@ -76,9 +77,10 @@ void gui::rebuild_windows()
     short term_fg, term_bg;
     pair_content(COLOR_PAIR(0),&term_fg,&term_bg);
 
+    // set up a pair using the current bg color
     init_pair(1,COLOR_WHITE,term_bg);
 
-    // 66 x 18 (64x16 excluding border)f
+    // 66 x 18 (64x16 excluding border)
     m_screen_window = std::shared_ptr<::WINDOW>(::newwin(18, 66, 0, 0), ::wdelch);
     wattron(m_screen_window.get(),A_BOLD); // make whiter
     wattron(m_screen_window.get(), COLOR_PAIR(1));

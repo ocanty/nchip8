@@ -2,13 +2,16 @@
 // Created by ocanty on 17/09/18.
 //
 
-#include "nchip8.hpp"
-#include "io.hpp"
+
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <stdexcept>
 #include <string>
+
+#include "nchip8.hpp"
+#include "io.hpp"
+#include "cpu_message.hpp"
 
 namespace nchip8
 {
@@ -21,7 +24,8 @@ nchip8_app::nchip8_app(const std::vector<std::string> &args) :
 
 int nchip8_app::run()
 {
-     // complain if they don't supply a file
+    // complain if they don't supply a file
+    //
     if (m_args.size() < 2) // args should contain [executable,first_argument]
     {
         throw std::invalid_argument("No ROM! (Usage: nchip8 <path to rom>");
@@ -37,43 +41,43 @@ int nchip8_app::run()
 
     // read in each byte
     std::vector<std::uint8_t> input_data;
+    std::uint32_t byte_count = 0; // we use this to print the bytes in blocks of 16
 
-    char byte;
-    while (input_file >> byte)
+    while (input_file.good() && !input_file.eof())
     {
+        char byte = 0x00;
+        input_file.read(&byte, sizeof(char));
         input_data.push_back((std::uint8_t)byte);
     }
 
-    nchip8::log << '\n';
+    m_cpu_daemon = std::make_shared<cpu_daemon>();
+    m_gui = std::make_unique<gui>(m_cpu_daemon);
 
-    m_cpu_daemon = std::make_unique<cpu_daemon>();
-
-    m_cpu_daemon->send_message(
-        cpu_message(
-            cpu_message_type::LoadROM,
-            input_data,
-            [this]()
-            {
-                // set the cpu running if the rom is loaded
-                m_cpu_daemon->send_message(
-                    cpu_message(cpu_message_type::SetStateRunning)
-                );
-            },
-
-            []() {
-                nchip8::log << "[nchip8] rom loading failed :(";
-            }
-        )
-    );
-
-    // set up clockspeed if specified
     if(m_args.size() > 2)
     {
         m_cpu_daemon->set_cpu_clockspeed(std::stoi(m_args.at(2)));
     }
 
-    m_gui = std::make_unique<gui>(m_cpu_daemon);
-    m_gui->loop(); // this is blocking
+    // reset the cpu
+    m_cpu_daemon->send_message(cpu_message(cpu_message_type::Reset));
+
+    // load rom
+    m_cpu_daemon->send_message(cpu_message(
+        cpu_message_type::LoadROM,
+        input_data,
+        [this]()
+        {
+            // tell cpu daemon to start doing cycles
+            m_cpu_daemon->set_cpu_state(cpu_daemon::running);
+        },
+
+        []() {
+            nchip8::log << "[nchip8] rom loading failed :(";
+        }
+    ));
+
+    // start gui, note: blocking
+    m_gui->loop();
 
     return 0;
 }

@@ -16,8 +16,6 @@ enum cpu_message_type : std::uint8_t
 {
     Reset,              //! Resets the cpu. Clear registers & ram, PC = 0x200   m_data: none
     LoadROM,            //! Writes a rom to cpu memory.                         m_data: vector of ROM binary
-    SetStateRunning,    //! Set cpu running
-    SetStatePaused,     //! Pause cpu at current instruction
     _last               // Used to find amount of messages, keep at end of enum
 };
 

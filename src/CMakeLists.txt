@@ -1,7 +1,7 @@
 
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lncursesw -std=c++17 -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -lncursesw -std=c++17 -pthread")
 
 find_package( PkgConfig REQUIRED )
 pkg_check_modules ( ncurses++ REQUIRED ncurses++ )

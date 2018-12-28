@@ -19,8 +19,7 @@ cpu_daemon::cpu_daemon() :
     {
         nchip8::log << "[cpu_daemon] received rom: " << msg.m_data.size() << " bytes " << '\n';
 
-        // reset cpu and load rom in
-        m_cpu.reset();
+        // load rom in
         bool loaded = m_cpu.load_rom(msg.m_data, 0x200);
 
         if(loaded)
@@ -33,13 +32,14 @@ cpu_daemon::cpu_daemon() :
         msg.m_on_error();
     });
 
-    // when we're asked to set the cpu running
-    this->register_message_handler(cpu_message_type::SetStateRunning, [this](const cpu_message &msg)
+    this->register_message_handler(cpu_message_type::Reset, [this](const cpu_message &msg)
     {
-        nchip8::log << "[cpu_daemon] set cpu running" << std::endl;
-        this->set_cpu_state(cpu_state::running);
+        nchip8::log << "[cpu_daemon] reset cpu " << '\n';
 
+        // reset cpu
+        m_cpu.reset();
         msg.m_callback();
+
     });
 
 
@@ -69,18 +69,20 @@ void cpu_daemon::cpu_thread()
 
     while(!die)
     {
+        if(m_cpu_state == cpu_state::running)
+        {
+            m_cpu.execute_op_at_pc();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000 / m_clock_speed));
+        }
 
-        // lock the data access to the message queue
-        //std::lock_guard<std::mutex> lock(m_cpu_thread_mutex);
-
-        // if the message queue is not empty
-        while (!m_unhandled_messages.empty())
+        std::unique_lock<std::mutex> lock(m_cpu_thread_mutex);
+        while(!m_unhandled_messages.empty())
         {
             // get front of queue
             const auto &msg = m_unhandled_messages.front();
 
             // does the message have message handlers? is it of the correct type?
-            if (m_message_handlers.at(msg.m_type).size() > 0)
+            if (!m_message_handlers.at(msg.m_type).empty())
             {
 
                 // call all the message handlers
@@ -91,24 +93,17 @@ void cpu_daemon::cpu_thread()
                 }
             }
 
-            // dispose of the message
             m_unhandled_messages.pop();
-        }
-
-        if(m_cpu_state == cpu_state::running)
-        {
-            m_cpu.execute_op_at_pc();
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000 / m_clock_speed));
         }
     }
 }
 
 void cpu_daemon::send_message(const cpu_message &message)
 {
-    // lock the data access to the message queue
-    std::lock_guard<std::mutex> lock(m_cpu_thread_mutex);
+    std::unique_lock<std::mutex> lock(m_cpu_thread_mutex);
     // push our message
     m_unhandled_messages.push(message);
+
 }
 
 void cpu_daemon::register_message_handler(const cpu_message_type &type, const cpu_message_handler &hdl)

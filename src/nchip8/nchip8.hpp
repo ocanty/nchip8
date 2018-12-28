@@ -34,7 +34,7 @@ private:
     std::vector<std::string> m_args;
 
     std::unique_ptr<gui> m_gui;
-    std::unique_ptr<cpu_daemon> m_cpu_daemon;
+    std::shared_ptr<cpu_daemon> m_cpu_daemon;
 };
 
 }

@@ -12,6 +12,7 @@
 #include <functional>
 #include <queue>
 #include <functional>
+#include <condition_variable>
 
 #include "cpu.hpp"
 #include "cpu_message.hpp"
@@ -94,7 +95,7 @@ public:
     const std::array<std::uint16_t, 16> get_stack() const;
 
 
-
+    
 private:
     //! The number of times a second we execute a CPU cycle
     std::size_t m_clock_speed = 500;
@@ -102,14 +103,19 @@ private:
     //! CPU instance
     cpu m_cpu;
 
+    //! Current cpu state, e.g. paused, running
     cpu_state m_cpu_state;
 
+    //! Thread object for void cpu_thread()
     std::thread m_cpu_thread;
+
+    //! Each instruction we execute using the cpu class is ran in here
     void cpu_thread();
 
-    //! Locked when a message is being passed, or handled
+    //! Locked when the message queue is being processed/operated on
     std::mutex m_cpu_thread_mutex;
 
+    //! The list of messages that still need to be processed by the cpu thread
     std::queue<cpu_message> m_unhandled_messages;
 
     //! Message handlers, first indexed by type, and then by each handler for that type
