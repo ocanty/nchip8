@@ -22,8 +22,6 @@ namespace nchip8
 gui::gui(std::shared_ptr<cpu_daemon>& cpu) :
     m_cpu_daemon(cpu)
 {
-
-    auto e = m_cpu_daemon->get_gpr();
     this->rebuild_windows();
 }
 
