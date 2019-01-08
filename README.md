@@ -8,7 +8,7 @@ Mainly for use over ssh by bored sysadmins
 
 Building
 ----
-_Requires ncurses_
+_Requires ncurses and **latest** clang/gcc due to C++17 \<optional\>_
 
 ```
 git clone https://github.com/ocanty/nchip8.git
