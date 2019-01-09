@@ -21,7 +21,7 @@ namespace nchip8
 
 //! The instruction encoding for these operations uses std::nullopt to
 //! specify a field with operand data
-//! for the purposes of space and readability, we are aliasing this to "operand"
+//! for the purposes of space and readability, we are aliasing this to DATA
 static constexpr std::nullopt_t DATA = std::nullopt;
 
 cpu::op_handler cpu::CLS
