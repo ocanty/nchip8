@@ -344,14 +344,14 @@ void gui::update_keys()
     // tell the cpu the key is down
     if(c != ERR && key_mapping.count(char_lowered))
     {
-        // if a valid character -> key map exists, tell the cpu the key is down
+        // tell the cpu the key is down
         m_cpu_daemon->set_key_down(key_mapping.at(char_lowered));
     }
 
     // curses does not have a method of knowing if multiple keys are pressed
     // we achieve multiple key inputs by giving each key a score
     // every frame we decrement the score
-    // if the score is decremented, the key is no longer considered pressed
+    // if the score is zero, the key is no longer considered pressed
     m_keys[char_lowered] = 3;
 
     for(auto& [key, key_score] : m_keys)
