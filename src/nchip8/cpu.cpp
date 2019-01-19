@@ -11,6 +11,8 @@
 #include <thread>
 #include <chrono>
 #include <algorithm>
+#include <ncurses.h>
+#include <iterator>
 
 namespace nchip8
 {
@@ -52,13 +54,12 @@ void cpu::reset()
     m_dt = 0;
     m_st = 0;
 
-    // copy each byte of the font sprite into memory
-    int i = 0;
-    for(auto& character : font) {
-        for(auto& byte : character) {
-            m_ram[i] = byte;
-            i++;
-        }
+    // copy each byte of the font sprite into memory,
+    // these are loaded sequentially
+    std::uint32_t i = 0;
+    for(std::array<uint8_t,5> character_data : font) {
+        std::copy_n(character_data.begin(), character_data.size(), m_ram.begin() + i);
+        i++;
     }
 
     m_keys_down.fill(false);

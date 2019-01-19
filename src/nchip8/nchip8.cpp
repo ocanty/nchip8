@@ -34,21 +34,27 @@ int nchip8_app::run()
     // try to read in the supplied rom file
     std::ifstream input_file(m_args[1], std::ios::binary | std::ios::in);
 
-    if (!input_file)
-    {
+    if (!input_file) {
         throw std::invalid_argument("Could not open " + m_args[1] + "!");
     }
 
-    // read in each byte
+    // read in file
     std::vector<std::uint8_t> input_data;
-    std::uint32_t byte_count = 0; // we use this to print the bytes in blocks of 16
 
-    while (input_file.good() && !input_file.eof())
+    if(!input_file.eof() && !input_file.fail())
     {
-        char byte = 0x00;
-        input_file.read(&byte, sizeof(char));
-        input_data.push_back((std::uint8_t)byte);
+        // seek to end of file, to get it's size
+        input_file.seekg(0, std::ios_base::end);
+
+        auto size = input_file.tellg();
+        input_data.resize(size);
+
+        // move file pointer back to beginning
+        input_file.seekg(0, std::ios_base::beg);
+
+        input_file.read((char*)&input_data[0], size);
     }
+
 
     m_cpu_daemon = std::make_shared<cpu_daemon>();
     m_gui = std::make_unique<gui>(m_cpu_daemon);
