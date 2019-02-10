@@ -519,7 +519,7 @@ cpu::op_handler cpu::LD_VX_K
 
         }
 
-        if(cpu.m_last_key_down != std::nullopt)
+        if(cpu.m_last_key_down.has_value())
         {
             cpu.m_gpr[operands.m_x] = cpu.m_last_key_down.value();
         }

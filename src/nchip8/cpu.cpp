@@ -201,7 +201,7 @@ void cpu::execute_op_at_pc()
     std::optional<op_handler> handler = get_op_handler_for_instruction(instruction);
 
     // if its a valid operation
-    if (handler != std::nullopt)
+    if (handler.has_value())
     {
         // update the delay timer and sleep timer while we're at it
         // let's check how much time has passed since the last cpu execution
