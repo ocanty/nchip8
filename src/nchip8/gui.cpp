@@ -120,7 +120,8 @@ void gui::update_windows_on_resize()
 
     Let's do our best to map it to a modern keyboard
  */
-const std::unordered_map<int, std::uint8_t> gui::key_mapping = {
+const std::unordered_map<int, std::uint8_t> gui::key_mapping =
+{
     {'1',0x1}, {'2',0x2}, {'3',0x3}, {'4', 0xC},
     {'q',0x4}, {'w',0x5}, {'e',0x6}, {'r', 0xD},
     {'a',0x7}, {'s',0x8}, {'d',0x9}, {'f', 0xE},
@@ -219,7 +220,9 @@ static void interp_screen(std::wstring& this_scr, std::wstring& prev_scr)
         {
             this_scr[i] = L'█';
             continue;
-        } else {
+        }
+        else
+        {
             this_scr[i] = last_scr_char;
         }
     }
@@ -363,7 +366,8 @@ void gui::update_keys()
         else // key press has departed
         {
             // bring the key back up (if it has a valid mapping)
-            if(key_mapping.count(key)) {
+            if(key_mapping.count(key))
+            {
                 m_cpu_daemon->set_key_up(key_mapping.at(key));
             }
 
