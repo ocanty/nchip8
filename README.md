@@ -4,7 +4,7 @@ A CHIP-8 emulator/interpreter that operates entirely in the terminal.
 
 Mainly for use over ssh by bored sysadmins
 
-<img src="https://giant.gfycat.com/GratefulCookedHalicore.gif" width="410" height="300">
+<img src="https://gfycat.com/gratefulcookedhalicore.gif" width="410" height="300">
 
 Building
 ----
